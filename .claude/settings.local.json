@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(php:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(node compare-bookings.js:*)",
+      "Bash(mysql:*)",
+      "Bash(if exist test-province-filter.php del test-province-filter.php)",
+      "Read(//c/Users/Chalantorn/Downloads/**)",
+      "Bash(C:xamppphpphp.exe check-quote-bookings.php)",
+      "Bash(/c/xampp/php/php.exe:*)",
+      "Bash(C:/xampp/php/php.exe -r \"\n$pdo = new PDO(''mysql:host=localhost;dbname=tptraveltransfer'', ''root'', '''');\n$stmt = $pdo->query(''DESCRIBE bookings'');\n$columns = $stmt->fetchAll(PDO::FETCH_COLUMN);\necho implode(\"\"\\n\"\", $columns);\n\")",
+      "Bash(C:/xampp/php/php.exe:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

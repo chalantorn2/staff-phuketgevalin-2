@@ -1,0 +1,775 @@
+import { useState } from "react";
+import { COMPANY } from "../../config/company";
+import { backendApi } from "../../services/backendApi";
+
+export default function TestSyncPage() {
+  const [dateFrom, setDateFrom] = useState("2025-06-01T00:00:00");
+  const [dateTo, setDateTo] = useState("2025-06-30T23:59:59");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Manual Sync states
+  const today = new Date().toISOString().split("T")[0];
+  const [manualDateFrom, setManualDateFrom] = useState(`${today}T00:00:00`);
+  const [manualDateTo, setManualDateTo] = useState(`${today}T23:59:59`);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualResult, setManualResult] = useState(null);
+  const [manualError, setManualError] = useState(null);
+
+  // Check booking states
+  const [bookingRef, setBookingRef] = useState("");
+  const [checkLoading, setCheckLoading] = useState(false);
+  const [bookingData, setBookingData] = useState(null);
+  const [checkError, setCheckError] = useState(null);
+
+  // Fetch single booking from Production API
+  const [prodBookingRef, setProdBookingRef] = useState("");
+  const [prodLoading, setProdLoading] = useState(false);
+  const [prodBookingData, setProdBookingData] = useState(null);
+  const [prodError, setProdError] = useState(null);
+
+  const handleSync = async () => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/dev/test-sync-arrivals.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dateFrom,
+          dateTo,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Sync failed");
+      }
+
+      setResult(data.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setManualLoading(true);
+    setManualError(null);
+    setManualResult(null);
+
+    try {
+      const response = await backendApi.manualSyncArrivals(
+        manualDateFrom,
+        manualDateTo
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || "Manual sync failed");
+      }
+
+      setManualResult(response.data);
+    } catch (err) {
+      setManualError(err.message);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
+  const handleCheckBooking = async () => {
+    if (!bookingRef.trim()) {
+      setCheckError("Please enter booking reference");
+      return;
+    }
+
+    setCheckLoading(true);
+    setCheckError(null);
+    setBookingData(null);
+
+    try {
+      const response = await fetch("/api/dev/check-booking.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookingRef: bookingRef.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Check failed");
+      }
+
+      setBookingData(data.data);
+    } catch (err) {
+      setCheckError(err.message);
+    } finally {
+      setCheckLoading(false);
+    }
+  };
+
+  const handleFetchProductionBooking = async () => {
+    if (!prodBookingRef.trim()) {
+      setProdError("Please enter booking reference");
+      return;
+    }
+
+    setProdLoading(true);
+    setProdError(null);
+    setProdBookingData(null);
+
+    try {
+      const response = await backendApi.holidayTaxis.getBookingByRef(
+        prodBookingRef.trim()
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || "Failed to fetch booking");
+      }
+
+      setProdBookingData(response.data);
+    } catch (err) {
+      setProdError(err.message);
+    } finally {
+      setProdLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          Sync Management
+        </h1>
+        <p className="text-sm text-gray-600">
+          ทดสอบและจัดการการซิงค์ข้อมูล Booking จาก Holiday Taxis
+        </p>
+      </div>
+
+      {/* Fetch Single Booking from Production API */}
+      <div className="bg-white rounded-lg shadow p-6 max-w-2xl mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span className="bg-cyan-100 text-cyan-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+            PRODUCTION
+          </span>
+          Fetch Single Booking (GET /bookings/{"{bookingRef}"})
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          ดึงข้อมูล Booking เดี่ยวจาก Production API โดยใช้ Booking Reference
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Booking Reference
+            </label>
+            <input
+              type="text"
+              value={prodBookingRef}
+              onChange={(e) => setProdBookingRef(e.target.value)}
+              onKeyPress={(e) =>
+                e.key === "Enter" && handleFetchProductionBooking()
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              placeholder="e.g., TCS-25581676"
+            />
+          </div>
+
+          <button
+            onClick={handleFetchProductionBooking}
+            disabled={prodLoading}
+            className={`w-full bg-cyan-600 text-white px-4 py-2 rounded-md font-medium ${
+              prodLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-cyan-700"
+            }`}
+          >
+            {prodLoading
+              ? "Fetching..."
+              : "🔍 Fetch Booking from Production API"}
+          </button>
+        </div>
+
+        {prodError && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">Error:</p>
+            <p>{prodError}</p>
+          </div>
+        )}
+
+        {prodBookingData && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-semibold text-green-900">
+                  ✅ Booking{" "}
+                  {prodBookingData.action === "created" ? "Created" : "Updated"}{" "}
+                  Successfully!
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  Booking has been saved to database
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const fullData = prodBookingData.full_api_response || prodBookingData.booking_data;
+                  const formatted = JSON.stringify(fullData, null, 2);
+                  navigator.clipboard.writeText(formatted);
+                  alert("Full API response copied to clipboard!");
+                }}
+                className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+              >
+                📋 Copy Full JSON
+              </button>
+            </div>
+
+            {/* Summary Card */}
+            <div className="bg-white rounded-lg p-3 mb-3 border border-green-300">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="font-medium text-gray-700">Booking Ref:</span>
+                <span className="text-gray-900 font-semibold">
+                  {prodBookingData.booking_ref}
+                </span>
+
+                <span className="font-medium text-gray-700">Action:</span>
+                <span
+                  className={`font-semibold ${
+                    prodBookingData.action === "created"
+                      ? "text-green-700"
+                      : "text-cyan-700"
+                  }`}
+                >
+                  {prodBookingData.action === "created"
+                    ? "✨ New Booking"
+                    : "🔄 Updated"}
+                </span>
+
+                <span className="font-medium text-gray-700">Status:</span>
+                <span className="text-gray-900">{prodBookingData.status}</span>
+
+                <span className="font-medium text-gray-700">Passenger:</span>
+                <span className="text-gray-900">
+                  {prodBookingData.passenger || "-"}
+                </span>
+
+                <span className="font-medium text-gray-700">Pickup Date:</span>
+                <span className="text-gray-900">
+                  {prodBookingData.pickup_date || "-"}
+                </span>
+
+                {prodBookingData.province && (
+                  <>
+                    <span className="font-medium text-gray-700">Province:</span>
+                    <span className="text-gray-900">
+                      {prodBookingData.province}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+            {/* Detailed Booking Data */}
+            <div className="space-y-2 text-sm">
+              {/* General Info */}
+              {prodBookingData.booking_data?.general && (
+                <div className="mb-3">
+                  <p className="font-semibold text-green-900 mb-2">
+                    General Information:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                    <span className="font-medium text-gray-700">
+                      Booking Ref:
+                    </span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.bookingreference ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Status:</span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.status || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Booking Type:
+                    </span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.bookingtype || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Passenger:
+                    </span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.passengername ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Email:</span>
+                    <span className="text-gray-900 text-xs break-all">
+                      {prodBookingData.booking_data.general.passengeremail ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Phone:</span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.passengertelno ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Vehicle:</span>
+                    <span className="text-gray-900">
+                      {prodBookingData.booking_data.general.vehicle || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Passengers:
+                    </span>
+                    <span className="text-gray-900">
+                      A: {prodBookingData.booking_data.general.adults || 0}, C:{" "}
+                      {prodBookingData.booking_data.general.children || 0}, I:{" "}
+                      {prodBookingData.booking_data.general.infants || 0}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Arrival Info */}
+              {prodBookingData.booking_data?.arrival &&
+                Object.keys(prodBookingData.booking_data.arrival).length >
+                  0 && (
+                  <div className="mb-3">
+                    <p className="font-semibold text-green-900 mb-2">
+                      Arrival Information:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                      <span className="font-medium text-gray-700">
+                        Arrival Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.arrival.arrivaldate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Flight No:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.arrival.flightno || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        From Airport:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.arrival.fromairport ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Accommodation:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.arrival
+                          .accommodationname || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Address:
+                      </span>
+                      <span className="text-gray-900 text-xs">
+                        {[
+                          prodBookingData.booking_data.arrival
+                            .accommodationaddress1,
+                          prodBookingData.booking_data.arrival
+                            .accommodationaddress2,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "-"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+              {/* Departure Info */}
+              {prodBookingData.booking_data?.departure &&
+                Object.keys(prodBookingData.booking_data.departure).length >
+                  0 && (
+                  <div className="mb-3">
+                    <p className="font-semibold text-green-900 mb-2">
+                      Departure Information:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                      <span className="font-medium text-gray-700">
+                        Departure Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.departure.departuredate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Pickup Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.departure.pickupdate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Flight No:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.departure.flightno || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        To Airport:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.departure.toairport ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Accommodation:
+                      </span>
+                      <span className="text-gray-900">
+                        {prodBookingData.booking_data.departure
+                          .accommodationname || "-"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Full JSON Data Section */}
+            <div className="mt-4 bg-gray-900 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-gray-100 text-sm">
+                  📄 Complete API Response (All Fields)
+                </p>
+                <button
+                  onClick={() => {
+                    const fullData = prodBookingData.full_api_response || prodBookingData.booking_data;
+                    const formatted = JSON.stringify(fullData, null, 2);
+                    navigator.clipboard.writeText(formatted);
+                    alert("Complete JSON copied!");
+                  }}
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                >
+                  📋 Copy All
+                </button>
+              </div>
+              <pre className="text-xs text-green-400 overflow-x-auto max-h-96 overflow-y-auto bg-gray-950 p-3 rounded">
+                {JSON.stringify(
+                  prodBookingData.full_api_response || prodBookingData.booking_data,
+                  null,
+                  2
+                )}
+              </pre>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manual Sync Section - Production */}
+      <div className="bg-white rounded-lg shadow p-6 max-w-2xl mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span className="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+            PRODUCTION
+          </span>
+          Manual Sync (Real Data)
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          ซิงค์ข้อมูลจริงจาก Production API - ค่าเริ่มต้นเป็นวันนี้
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date From
+            </label>
+            <input
+              type="text"
+              value={manualDateFrom}
+              onChange={(e) => setManualDateFrom(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="YYYY-MM-DDTHH:mm:ss"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Format: {today}T00:00:00
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date To
+            </label>
+            <input
+              type="text"
+              value={manualDateTo}
+              onChange={(e) => setManualDateTo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="YYYY-MM-DDTHH:mm:ss"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Format: {today}T23:59:59 (สูงสุด 30 วัน)
+            </p>
+          </div>
+
+          <button
+            onClick={handleManualSync}
+            disabled={manualLoading}
+            className={`w-full bg-green-600 text-white px-4 py-2 rounded-md font-medium ${
+              manualLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-green-700"
+            }`}
+          >
+            {manualLoading ? "Syncing..." : "🚀 Manual Sync (Production)"}
+          </button>
+        </div>
+
+        {manualError && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">Error:</p>
+            <p>{manualError}</p>
+          </div>
+        )}
+
+        {manualResult && (
+          <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <p className="font-medium mb-2">✅ Manual Sync Success!</p>
+            <div className="text-sm space-y-1">
+              <p>
+                📅 Date Range: {manualResult.date_range?.from} →{" "}
+                {manualResult.date_range?.to}
+              </p>
+              <p>📊 Total Days: {manualResult.total_days} days</p>
+              <p>🔍 Found: {manualResult.total_found} bookings</p>
+              <p>✨ New: {manualResult.total_new} bookings</p>
+              <p>🔄 Updated: {manualResult.total_updated} bookings</p>
+              <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-green-300">
+                Sync ID: {manualResult.sync_id}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Test Sync Section */}
+      <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+            TEST API
+          </span>
+          Test Sync (Arrivals)
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          ทดสอบดึงข้อมูล Booking จาก Holiday Taxis Test API
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date From (Arrival)
+            </label>
+            <input
+              type="text"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              placeholder="YYYY-MM-DDTHH:mm:ss"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date To (Arrival)
+            </label>
+            <input
+              type="text"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              placeholder="YYYY-MM-DDTHH:mm:ss"
+            />
+          </div>
+
+          <button
+            onClick={handleSync}
+            disabled={loading}
+            className={`w-full ${
+              COMPANY.colors.primary
+            } text-white px-4 py-2 rounded-md ${
+              loading
+                ? "opacity-50 cursor-not-allowed"
+                : COMPANY.colors.primaryHover
+            }`}
+          >
+            {loading ? "Syncing..." : "Sync Test Bookings"}
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">Error:</p>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {result && (
+          <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            <p className="font-medium mb-2">Sync Success!</p>
+            <div className="text-sm space-y-1">
+              <p>Found: {result.totalFound} bookings</p>
+              <p>New: {result.totalNew} bookings</p>
+              <p>Updated: {result.totalUpdated} bookings</p>
+              <p>Detail Synced: {result.totalDetailed} bookings</p>
+              <p className="text-xs text-gray-600 mt-2">
+                {result.dateRange.from} → {result.dateRange.to}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Check Booking Section */}
+      <div className="bg-white rounded-lg shadow p-6 max-w-2xl mt-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Check Booking from Holiday Taxis
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Booking Reference
+            </label>
+            <input
+              type="text"
+              value={bookingRef}
+              onChange={(e) => setBookingRef(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              placeholder="e.g., TCS-25581676"
+            />
+          </div>
+
+          <button
+            onClick={handleCheckBooking}
+            disabled={checkLoading}
+            className={`w-full bg-purple-600 text-white px-4 py-2 rounded-md ${
+              checkLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-purple-700"
+            }`}
+          >
+            {checkLoading ? "Checking..." : "Check Booking"}
+          </button>
+        </div>
+
+        {checkError && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">Error:</p>
+            <p>{checkError}</p>
+          </div>
+        )}
+
+        {bookingData && (
+          <div className="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded">
+            <p className="font-semibold text-cyan-900 mb-3">Booking Data:</p>
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <span className="font-medium text-gray-700">Ref:</span>
+                <span className="text-gray-900">{bookingData.ref}</span>
+
+                <span className="font-medium text-gray-700">Status:</span>
+                <span className="text-gray-900">{bookingData.status}</span>
+
+                <span className="font-medium text-gray-700">Passenger:</span>
+                <span className="text-gray-900">
+                  {bookingData.passenger || "-"}
+                </span>
+
+                <span className="font-medium text-gray-700">Vehicle:</span>
+                <span className="text-gray-900">
+                  {bookingData.vehicle || "-"}
+                </span>
+              </div>
+
+              {bookingData.driver && (
+                <div className="mt-3 pt-3 border-t border-cyan-200">
+                  <p className="font-medium text-cyan-900 mb-2">Driver Info:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <span className="font-medium text-gray-700">Name:</span>
+                    <span className="text-gray-900">
+                      {bookingData.driver.name || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Phone:</span>
+                    <span className="text-gray-900">
+                      {bookingData.driver.phone || "-"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {bookingData.vehicleInfo && (
+                <div className="mt-3 pt-3 border-t border-cyan-200">
+                  <p className="font-medium text-cyan-900 mb-2">
+                    Vehicle Info:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <span className="font-medium text-gray-700">
+                      Registration:
+                    </span>
+                    <span className="text-gray-900">
+                      {bookingData.vehicleInfo.registration || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Model:</span>
+                    <span className="text-gray-900">
+                      {bookingData.vehicleInfo.model || "-"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {bookingData.tracking && (
+                <div className="mt-3 pt-3 border-t border-cyan-200">
+                  <p className="font-medium text-cyan-900 mb-2">
+                    Tracking Status:
+                  </p>
+                  <span className="text-gray-900">
+                    {bookingData.tracking.status || "-"}
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-cyan-200">
+                <button
+                  onClick={() => {
+                    const formatted = JSON.stringify(bookingData.raw, null, 2);
+                    navigator.clipboard.writeText(formatted);
+                    alert("Full data copied to clipboard!");
+                  }}
+                  className="text-xs text-cyan-600 hover:text-cyan-800 underline"
+                >
+                  Copy Full Data (JSON)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

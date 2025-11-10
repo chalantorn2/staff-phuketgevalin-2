@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Holiday Taxis API Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      textarea,
+      select,
+      input {
+        width: 100%;
+        margin-top: 5px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .alert {
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 5px;
+      }
+      .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .api-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-6 text-center">
+        Holiday Taxis API Tester
+      </h1>
+
+      <!-- API Configuration -->
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">API Configuration</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block mb-2 font-medium">API Key:</label>
+            <input
+              type="text"
+              id="apiKey"
+              value="htscon_40b5cf18a8c98dc9f01a7fb65806ed8aefdabfe7f6130dcd6bfbc91ab1fd4c4f79966d6ba1304650"
+              class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+          <div>
+            <label class="block mb-2 font-medium">Base URL:</label>
+            <input
+              type="text"
+              id="baseUrl"
+              value="https://suppliers.htxstaging.com"
+              class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+          <div>
+            <label class="block mb-2 font-medium">API Version:</label>
+            <input
+              type="text"
+              id="apiVersion"
+              value="2025-01"
+              class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- API Tests -->
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">API Tests</h2>
+
+        <!-- 1. Retrieve Individual Booking -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            1. ดึงข้อมูลจองรายคน (GET /bookings/{bookingRef})
+          </h3>
+          <label class="block mb-2 font-medium">Booking Reference:</label>
+          <input
+            type="text"
+            id="bookingRefRetrieve"
+            value="HBLOV-25216115"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <button
+            onclick="testRetrieveBooking()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-retrieve-booking"></div>
+        </div>
+
+        <!-- 2. Search Bookings by Last Action Date -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            2. ค้นหาการจองตามวันที่เปลี่ยนล่าสุด (GET
+            /bookings/search/since/...)
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Date From:</label>
+              <input
+                type="text"
+                id="dateFromLastAction"
+                value="2025-06-01T00:00:00"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Date To:</label>
+              <input
+                type="text"
+                id="dateToLastAction"
+                value="2025-06-15T23:59:59"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Page Number:</label>
+              <input
+                type="number"
+                id="pageNumberLastAction"
+                value="1"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <button
+            onclick="testSearchLastAction()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-search-last-action"></div>
+        </div>
+
+        <!-- 3. Search Bookings by Arrival Date -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            3. ค้นหาการจองตามวันที่มาถึง (GET /bookings/search/arrivals/...)
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Date From:</label>
+              <input
+                type="text"
+                id="dateFromArrival"
+                value="2025-06-20T00:00:00"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Date To:</label>
+              <input
+                type="text"
+                id="dateToArrival"
+                value="2025-06-29T23:59:59"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Page Number:</label>
+              <input
+                type="number"
+                id="pageNumberArrival"
+                value="1"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <button
+            onclick="testSearchArrivals()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-search-arrivals"></div>
+        </div>
+
+        <!-- 4. Search Bookings by Departure Date -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            4. ค้นหาการจองตามวันที่กลับ (GET /bookings/search/departures/...)
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Date From:</label>
+              <input
+                type="text"
+                id="dateFromDeparture"
+                value="2025-06-15T00:00:00"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Date To:</label>
+              <input
+                type="text"
+                id="dateToDeparture"
+                value="2025-06-15T23:59:59"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Page Number:</label>
+              <input
+                type="number"
+                id="pageNumberDeparture"
+                value="1"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <button
+            onclick="testSearchDepartures()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-search-departures"></div>
+        </div>
+
+        <!-- 5. Retrieve Booking Notes -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            5. ดึงโน้ตของการจอง (GET /bookings/notes/{bookingRef})
+          </h3>
+          <label class="block mb-2 font-medium">Booking Reference:</label>
+          <input
+            type="text"
+            id="bookingRefNotes"
+            value="HBLOV-25216115"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <button
+            onclick="testRetrieveNotes()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-retrieve-notes"></div>
+        </div>
+
+        <!-- 6. Update Individual Booking -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            6. อัปเดตข้อมูลจองรายคน (PUT /bookings/{bookingRef})
+          </h3>
+          <label class="block mb-2 font-medium">Booking Reference:</label>
+          <input
+            type="text"
+            id="bookingRefUpdate"
+            value="HBLOV-25216115"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <label class="block mb-2 font-medium">Booking Status:</label>
+          <select
+            id="bookingStatusUpdate"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="ACON">Confirmed (ACON)</option>
+            <option value="ACAN">Cancelled (ACAN)</option>
+            <option value="PACC">PACC (PACC)</option>
+          </select>
+          <button
+            onclick="testUpdateBooking()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-update-booking"></div>
+        </div>
+
+        <!-- 7. Update Multiple Bookings -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            7. อัปเดตหลายจองพร้อมกัน (POST /bookings)
+          </h3>
+          <label class="block mb-2 font-medium"
+            >Booking References (Comma-separated):</label
+          >
+          <input
+            type="text"
+            id="bookingRefsMultiple"
+            placeholder="e.g., HBLOV-25216115, DES2-21955182"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <label class="block mb-2 font-medium">Booking Status:</label>
+          <select
+            id="bookingStatusMultiple"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="ACON">From PCON to ACON (Confirm)</option>
+            <option value="AAMM">From PAMM to AAMM (Approve Amendment)</option>
+            <option value="ACAN">
+              From PCAN to ACAN (Approve Cancellation)
+            </option>
+          </select>
+          <button
+            onclick="testUpdateMultipleBookings()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-update-multiple-bookings"></div>
+        </div>
+
+        <!-- 8. Reconfirm Bookings -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            8. ยืนยันจองใหม่ (POST /bookings/reconfirm)
+          </h3>
+          <label class="block mb-2 font-medium"
+            >Booking References (Comma-separated):</label
+          >
+          <input
+            type="text"
+            id="bookingRefsReconfirm"
+            placeholder="e.g., HBLOV-25216115, DES2-21955182"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <button
+            onclick="testReconfirmBookings()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-reconfirm-bookings"></div>
+        </div>
+
+        <!-- 9. Set Driver and Vehicle -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            9. ส่งข้อมูลคนขับ+รถ (PUT
+            /bookings/{bookingRef}/vehicles/{vehicleIdentifier})
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Booking Reference:</label>
+              <input
+                type="text"
+                id="bookingRefDriverEvents"
+                value="HBLOV-25216115"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Vehicle Identifier:</label>
+              <input
+                type="text"
+                id="vehicleIdentifier"
+                value="vehicle_001"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <textarea id="setDriverBody">
+{
+  "driver": {
+    "name": "Joe",
+    "phoneNumber": "+441273828200",
+    "preferredContactMethod": "VOICE",
+    "contactMethods": ["VOICE", "SMS", "WHATSAPP"],
+    "licenseNumber": "A42"
+  },
+  "vehicle": {
+    "brand": "Toyota",
+    "model": "Minibus",
+    "color": "cyan",
+    "description": "Branded with 'Acme Transfers'",
+    "registration": "AB-123-XYZ"
+  }
+}
+        </textarea
+          >
+          <button
+            onclick="testSetDriver()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-set-driver"></div>
+        </div>
+
+        <!-- 10. Set Vehicle Location -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            10. ส่งตำแหน่งรถ (POST
+            /bookings/{bookingRef}/vehicles/{vehicleIdentifier}/location)
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Booking Reference:</label>
+              <input
+                type="text"
+                id="bookingRefLocation"
+                value="HBLOV-25216115"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Vehicle Identifier:</label>
+              <input
+                type="text"
+                id="vehicleIdentifierLocation"
+                value="vehicle_001"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div>
+              <label class="block mb-2 font-medium">Latitude:</label>
+              <input
+                type="number"
+                id="latitude"
+                value="50.82109"
+                step="0.000001"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Longitude:</label>
+              <input
+                type="number"
+                id="longitude"
+                value="-0.141366"
+                step="0.000001"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <label class="block mb-2 font-medium">Status:</label>
+          <select
+            id="locationStatus"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="BEFORE_PICKUP">Before Pickup</option>
+            <option value="WAITING_FOR_CUSTOMER" selected>
+              Waiting for Customer
+            </option>
+            <option value="AFTER_PICKUP">After Pickup</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="NO_SHOW">No Show</option>
+          </select>
+          <div id="timestampAlert" class="alert alert-error hidden"></div>
+          <button
+            onclick="testSetLocation()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-set-location"></div>
+        </div>
+
+        <!-- 11. Deallocate Vehicle -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            11. ลบข้อมูลรถ (DELETE
+            /bookings/{bookingRef}/vehicles/{vehicleIdentifier})
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block mb-2 font-medium">Booking Reference:</label>
+              <input
+                type="text"
+                id="bookingRefDeallocate"
+                value="HBLOV-25216115"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Vehicle Identifier:</label>
+              <input
+                type="text"
+                id="vehicleIdentifierDeallocate"
+                value="vehicle_001"
+                class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+              />
+            </div>
+          </div>
+          <button
+            onclick="testDeallocateVehicle()"
+            class="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-deallocate-vehicle"></div>
+        </div>
+
+        <!-- 12. Retrieve Resorts -->
+        <div class="api-section">
+          <h3 class="text-lg font-medium mb-2">
+            12. ดึงข้อมูลรีสอร์ท (GET /products/resorts/areas)
+          </h3>
+          <label class="block mb-2 font-medium">Start At (Resort ID):</label>
+          <input
+            type="number"
+            id="startAtResorts"
+            value="1"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-cyan-500"
+          />
+          <button
+            onclick="testRetrieveResorts()"
+            class="mt-2 bg-cyan-500 text-white px-4 py-2 rounded hover:bg-cyan-600 transition duration-200"
+          >
+            Test
+          </button>
+          <div id="result-retrieve-resorts"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ฟังก์ชันสำหรับส่งคำขอไปยังเซิร์ฟเวอร์
+      async function sendApiRequest(
+        endpoint,
+        method,
+        params = {},
+        body = null
+      ) {
+        const url = `http://localhost:3000/api${endpoint}`;
+        const options = {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Request-Timestamp":
+              body?.timestamp ||
+              new Date().toISOString().split(".")[0] + "+00:00",
+          },
+        };
+
+        const requestData = { ...params };
+        if (body) {
+          Object.assign(requestData, body);
+        }
+        options.body = JSON.stringify(requestData);
+
+        const startTime = Date.now();
+        try {
+          const response = await fetch(url, options);
+          const endTime = Date.now();
+          const delay = (endTime - startTime) / 1000;
+
+          if (endpoint === "/set-location" && delay > 8) {
+            throw new Error(
+              `Request took too long (${delay.toFixed(
+                2
+              )} seconds). Timestamp may be invalid. Please try again.`
+            );
+          }
+
+          const data = await response.json();
+          return { ...data, delay: delay.toFixed(2) };
+        } catch (error) {
+          return {
+            status: 500,
+            error: error.message,
+            delay: ((Date.now() - startTime) / 1000).toFixed(2),
+          };
+        }
+      }
+
+      // แสดงผลลัพธ์ในรูปแบบตารางสำหรับแต่ละ API
+      function displayResult(result, additionalInfo = {}, resultElementId) {
+        const resultDiv = document.getElementById(resultElementId);
+        const summary = { ...additionalInfo, ...result };
+
+        const table = document.createElement("table");
+        table.className =
+          summary.status === 200 || summary.status === 204
+            ? "success"
+            : "error";
+
+        const headerRow = document.createElement("tr");
+        const headers = ["Field", "Value"];
+        headers.forEach((header) => {
+          const th = document.createElement("th");
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        const addRow = (field, value) => {
+          const row = document.createElement("tr");
+          const fieldCell = document.createElement("td");
+          fieldCell.textContent = field;
+          const valueCell = document.createElement("td");
+          valueCell.textContent =
+            typeof value === "object" ? JSON.stringify(value, null, 2) : value;
+          row.appendChild(fieldCell);
+          row.appendChild(valueCell);
+          table.appendChild(row);
+        };
+
+        addRow("Action", summary.action);
+        if (summary.bookingId) addRow("Booking ID", summary.bookingId);
+        if (summary.vehicleIdentifier)
+          addRow("Vehicle Identifier", summary.vehicleIdentifier);
+        addRow("Status", summary.status);
+        addRow("Timestamp", summary.timestamp);
+        addRow("API Key", summary.apiKey);
+        if (summary.delay) addRow("Request Delay (seconds)", summary.delay);
+        if (summary.responseData) {
+          if (summary.responseData.errors) {
+            addRow("Errors", summary.responseData.errors);
+          } else {
+            addRow("Response Data", summary.responseData);
+          }
+        }
+        if (summary.error) addRow("Error", summary.error);
+
+        resultDiv.innerHTML = "";
+        resultDiv.appendChild(table);
+      }
+
+      // แสดงการแจ้งเตือน
+      function showAlert(message, elementId) {
+        const alertDiv = document.getElementById(elementId);
+        alertDiv.textContent = message;
+        alertDiv.classList.remove("hidden");
+        setTimeout(() => {
+          alertDiv.classList.add("hidden");
+        }, 5000);
+      }
+
+      // API Tests
+      async function testRetrieveBooking() {
+        const bookingRef = document.getElementById("bookingRefRetrieve").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { bookingRef, apiKey, baseUrl, apiVersion };
+        const result = await sendApiRequest(
+          "/retrieve-booking",
+          "POST",
+          params
+        );
+        displayResult(
+          result,
+          {
+            bookingId: bookingRef,
+            action: "Retrieve Individual Booking (GET)",
+          },
+          "result-retrieve-booking"
+        );
+      }
+
+      async function testSearchLastAction() {
+        const dateFrom = document.getElementById("dateFromLastAction").value;
+        const dateTo = document.getElementById("dateToLastAction").value;
+        const pageNumber = document.getElementById(
+          "pageNumberLastAction"
+        ).value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = {
+          dateFrom,
+          dateTo,
+          pageNumber,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest(
+          "/search-last-action",
+          "POST",
+          params
+        );
+        displayResult(
+          result,
+          { action: "Search Bookings by Last Action Date (GET)" },
+          "result-search-last-action"
+        );
+      }
+
+      async function testSearchArrivals() {
+        const dateFrom = document.getElementById("dateFromArrival").value;
+        const dateTo = document.getElementById("dateToArrival").value;
+        const pageNumber = document.getElementById("pageNumberArrival").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = {
+          dateFrom,
+          dateTo,
+          pageNumber,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest("/search-arrivals", "POST", params);
+        displayResult(
+          result,
+          { action: "Search Bookings by Arrival Date (GET)" },
+          "result-search-arrivals"
+        );
+      }
+
+      async function testSearchDepartures() {
+        const dateFrom = document.getElementById("dateFromDeparture").value;
+        const dateTo = document.getElementById("dateToDeparture").value;
+        const pageNumber = document.getElementById("pageNumberDeparture").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = {
+          dateFrom,
+          dateTo,
+          pageNumber,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest(
+          "/search-departures",
+          "POST",
+          params
+        );
+        displayResult(
+          result,
+          { action: "Search Bookings by Departure Date (GET)" },
+          "result-search-departures"
+        );
+      }
+
+      async function testRetrieveNotes() {
+        const bookingRef = document.getElementById("bookingRefNotes").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { bookingRef, apiKey, baseUrl, apiVersion };
+        const result = await sendApiRequest("/retrieve-notes", "POST", params);
+        displayResult(
+          result,
+          { bookingId: bookingRef, action: "Retrieve Booking Notes (GET)" },
+          "result-retrieve-notes"
+        );
+      }
+
+      async function testUpdateBooking() {
+        const bookingRef = document.getElementById("bookingRefUpdate").value;
+        const status = document.getElementById("bookingStatusUpdate").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { bookingRef, apiKey, baseUrl, apiVersion };
+        const body = {
+          request: {
+            status: status,
+          },
+        };
+        const result = await sendApiRequest(
+          "/update-booking",
+          "POST",
+          params,
+          body
+        );
+        displayResult(
+          result,
+          { bookingId: bookingRef, action: "Update Individual Booking (PUT)" },
+          "result-update-booking"
+        );
+      }
+      async function testUpdateMultipleBookings() {
+        const bookingRefs = document
+          .getElementById("bookingRefsMultiple")
+          .value.split(",")
+          .map((ref) => ref.trim());
+        const status = document.getElementById("bookingStatusMultiple").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { apiKey, baseUrl, apiVersion };
+        const body = {
+          bookings: bookingRefs.map((ref) => ({
+            ref,
+            status,
+          })),
+        };
+        const requestData = { ...params, ...body };
+        const result = await sendApiRequest(
+          "/update-multiple-bookings",
+          "POST",
+          params,
+          body
+        );
+        displayResult(
+          result,
+          { action: "Update Multiple Bookings (POST)" },
+          "result-update-multiple-bookings"
+        );
+      }
+
+      async function testReconfirmBookings() {
+        const bookingRefs = document
+          .getElementById("bookingRefsReconfirm")
+          .value.split(",")
+          .map((ref) => ref.trim());
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { apiKey, baseUrl, apiVersion };
+        const body = {
+          bookings: bookingRefs.map((ref) => ({ ref })),
+        };
+        const result = await sendApiRequest(
+          "/reconfirm-bookings",
+          "POST",
+          params,
+          body
+        );
+        displayResult(
+          result,
+          { action: "Reconfirm Bookings (POST)" },
+          "result-reconfirm-bookings"
+        );
+      }
+      async function testSetDriver() {
+        const bookingRef = document.getElementById(
+          "bookingRefDriverEvents"
+        ).value;
+        const vehicleIdentifier =
+          document.getElementById("vehicleIdentifier").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+        const bodyText = document.getElementById("setDriverBody").value;
+        const body = JSON.parse(bodyText);
+
+        const params = {
+          bookingRef,
+          vehicleIdentifier,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest(
+          "/set-driver",
+          "POST",
+          params,
+          body
+        );
+        displayResult(
+          result,
+          {
+            bookingId: bookingRef,
+            vehicleIdentifier: vehicleIdentifier,
+            action: "Set Driver and Vehicle (PUT)",
+          },
+          "result-set-driver"
+        );
+      }
+
+      async function getServerTime() {
+        const response = await fetch(
+          "http://localhost:3000/api/retrieve-booking",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bookingRef: "HTXA-23923048",
+              apiKey:
+                "htscon_40b5cf18a8c98dc9f01a7fb65806ed8aefdabfe7f6130dcd6bfbc91ab1fd4c4f79966d6ba1304650",
+              baseUrl: "https://suppliers.htxstaging.com",
+              apiVersion: "2025-01",
+            }),
+          }
+        );
+        const serverDate = response.headers.get("Date");
+        return new Date(serverDate);
+      }
+
+      async function testSetLocation() {
+        const bookingRef = document.getElementById("bookingRefLocation").value;
+        const vehicleIdentifier = document.getElementById(
+          "vehicleIdentifierLocation"
+        ).value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+        const latitude = document.getElementById("latitude").value;
+        const longitude = document.getElementById("longitude").value;
+        const status = document.getElementById("locationStatus").value;
+
+        const serverTime = await getServerTime();
+        const timestamp = serverTime.toISOString().split(".")[0] + "+00:00";
+
+        const body = {
+          timestamp: timestamp,
+          location: {
+            lat: parseFloat(latitude),
+            lng: parseFloat(longitude),
+          },
+          status: status,
+        };
+
+        const params = {
+          bookingRef,
+          vehicleIdentifier,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest(
+          "/set-location",
+          "POST",
+          params,
+          body
+        );
+
+        if (result.status === 400 && result.responseData?.errors?.timestamp) {
+          showAlert(
+            "Timestamp error: " +
+              result.responseData.errors.timestamp +
+              ". Please try again.",
+            "timestampAlert"
+          );
+        } else if (
+          result.error &&
+          result.error.includes("Request took too long")
+        ) {
+          showAlert(result.error, "timestampAlert");
+        }
+
+        displayResult(
+          result,
+          {
+            bookingId: bookingRef,
+            vehicleIdentifier: vehicleIdentifier,
+            action: "Set Vehicle Location (POST)",
+          },
+          "result-set-location"
+        );
+      }
+
+      async function testDeallocateVehicle() {
+        const bookingRef = document.getElementById(
+          "bookingRefDeallocate"
+        ).value;
+        const vehicleIdentifier = document.getElementById(
+          "vehicleIdentifierDeallocate"
+        ).value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = {
+          bookingRef,
+          vehicleIdentifier,
+          apiKey,
+          baseUrl,
+          apiVersion,
+        };
+        const result = await sendApiRequest(
+          "/deallocate-vehicle",
+          "POST",
+          params
+        );
+        displayResult(
+          result,
+          {
+            bookingId: bookingRef,
+            vehicleIdentifier: vehicleIdentifier,
+            action: "Deallocate Vehicle (DELETE)",
+          },
+          "result-deallocate-vehicle"
+        );
+      }
+
+      async function testRetrieveResorts() {
+        const startAt = document.getElementById("startAtResorts").value;
+        const apiKey = document.getElementById("apiKey").value;
+        const baseUrl = document.getElementById("baseUrl").value;
+        const apiVersion = document.getElementById("apiVersion").value;
+
+        const params = { startAt, apiKey, baseUrl, apiVersion };
+        const result = await sendApiRequest(
+          "/retrieve-resorts",
+          "POST",
+          params
+        );
+        displayResult(
+          result,
+          { action: "Retrieve Resorts (GET)" },
+          "result-retrieve-resorts"
+        );
+      }
+    </script>
+  </body>
+</html>

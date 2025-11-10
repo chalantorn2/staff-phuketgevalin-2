@@ -1,0 +1,12 @@
+# Enable Rewrite Engine
+RewriteEngine On
+RewriteBase /
+
+# Skip rewrite for existing files and directories
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirect short URLs like /TCS-25581676/a1b2c3d4 to redirect handler
+# Pattern: /BOOKING-REF/SHORT_TOKEN (alphanumeric and hyphens)
+RewriteRule ^([A-Z0-9-]+)/([a-z0-9]+)$ api/tracking/redirect.php [L,QSA]

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver Tracking - Phuket Gevalin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .animate-pulse-custom {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-gradient-to-br from-cyan-50 to-cyan-50 min-h-screen">
+    <div id="app" class="p-4">
+      <!-- Loading State -->
+      <div id="loading" class="flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <i class="fas fa-spinner fa-spin text-4xl text-cyan-600 mb-4"></i>
+          <p class="text-gray-600">กำลังโหลด...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="error" class="hidden">
+        <div class="max-w-md mx-auto mt-20">
+          <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="text-red-600 text-center">
+              <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+              <h2 class="text-xl font-semibold mb-2">ลิงก์ไม่ถูกต้อง</h2>
+              <p id="error-message" class="text-gray-700"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div id="content" class="hidden max-w-md mx-auto space-y-4 py-4">
+        <!-- Header Card -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h1 class="text-2xl font-bold text-gray-900">🚗 Transfer</h1>
+            <span
+              id="status-badge"
+              class="px-3 py-1 rounded-full text-sm font-medium"
+            >
+              รอเริ่มงาน
+            </span>
+          </div>
+          <div class="space-y-2 text-sm">
+            <p class="text-gray-500">Booking Ref:</p>
+            <p id="booking-ref" class="text-lg font-semibold text-cyan-600">
+              -
+            </p>
+          </div>
+        </div>
+
+        <!-- Booking Info Card -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-lg font-semibold mb-4 text-gray-900">
+            📋 รายละเอียดการจอง
+          </h2>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3">
+              <i class="fas fa-user text-cyan-600 mt-1"></i>
+              <div>
+                <p class="text-sm text-gray-500">ผู้โดยสาร</p>
+                <p id="passenger-name" class="font-medium">-</p>
+                <p id="passenger-phone" class="text-sm text-gray-600">-</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fas fa-map-marker-alt text-cyan-600 mt-1"></i>
+              <div class="flex-1">
+                <p class="text-sm text-gray-500">จุดรับ</p>
+                <p id="pickup-location" class="font-medium">-</p>
+                <div id="pickup-datetime-container">
+                  <p id="pickup-datetime" class="text-sm text-cyan-600">-</p>
+                  <p
+                    id="time-adjusted-badge"
+                    class="hidden text-xs text-orange-600 mt-1"
+                  >
+                    <i class="fas fa-clock mr-1"></i>
+                    เวลาใหม่
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <i class="fas fa-map-marker-alt text-red-600 mt-1"></i>
+              <div>
+                <p class="text-sm text-gray-500">จุดส่ง</p>
+                <p id="dropoff-location" class="font-medium">-</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <i class="fas fa-users text-cyan-600"></i>
+              <div>
+                <p class="text-sm text-gray-500">จำนวนผู้โดยสาร</p>
+                <p id="pax" class="font-medium">-</p>
+              </div>
+            </div>
+
+            <div
+              id="flight-info-container"
+              class="hidden flex items-start gap-3"
+            >
+              <i class="fas fa-plane text-cyan-600 mt-1"></i>
+              <div>
+                <p class="text-sm text-gray-500">เที่ยวบิน</p>
+                <p id="flight-info" class="font-medium">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assignment Notes Card -->
+        <div
+          id="assignment-notes"
+          class="hidden bg-cyan-50 border-2 border-cyan-200 rounded-xl p-4"
+        >
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-message text-cyan-600 text-xl"></i>
+            <p
+              id="assignment-notes-content"
+              class="text-sm text-cyan-800 whitespace-pre-wrap flex-1"
+            ></p>
+          </div>
+        </div>
+
+        <!-- GPS Status Card -->
+        <div
+          id="gps-status"
+          class="hidden bg-green-50 border-2 border-green-200 rounded-xl p-4"
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <i class="fas fa-satellite-dish text-green-600 text-xl"></i>
+            <h3 class="font-semibold text-green-900">GPS กำลังทำงาน</h3>
+          </div>
+          <div class="text-sm text-green-800 space-y-1">
+            <p id="gps-lat">📍 Lat: -</p>
+            <p id="gps-lng">📍 Lng: -</p>
+            <p id="gps-interval" class="text-xs text-green-600 mt-2">-</p>
+          </div>
+        </div>
+
+        <!-- Date Validation Warning -->
+        <div
+          id="date-warning"
+          class="hidden bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4"
+        >
+          <div class="flex items-start gap-3">
+            <i
+              class="fas fa-exclamation-triangle text-yellow-600 text-xl mt-1"
+            ></i>
+            <div class="flex-1">
+              <h3
+                class="font-semibold text-yellow-900 mb-1"
+                id="date-warning-title"
+              >
+                คำเตือน
+              </h3>
+              <p class="text-sm text-yellow-800" id="date-warning-message">-</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+          <button
+            id="btn-start"
+            class="hidden w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="fas fa-play-circle mr-2"></i>
+            เริ่มงาน
+          </button>
+
+          <button
+            id="btn-complete"
+            class="hidden w-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-cyan-600 hover:to-cyan-700 transition-all"
+          >
+            <i class="fas fa-check-circle mr-2"></i>
+            เสร็จสิ้นงาน
+          </button>
+
+          <button
+            id="btn-no-show"
+            class="hidden w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+          >
+            <i class="fas fa-user-times mr-2"></i>
+            ไม่เจอลูกค้า (No Show)
+          </button>
+
+          <div
+            id="completed-state"
+            class="hidden bg-cyan-50 border-2 border-cyan-200 rounded-xl p-6 text-center"
+          >
+            <i class="fas fa-check-circle text-cyan-600 text-5xl mb-3"></i>
+            <h3 class="text-xl font-semibold text-cyan-900 mb-2">
+              งานเสร็จสมบูรณ์!
+            </h3>
+            <p class="text-cyan-700">ขอบคุณสำหรับการให้บริการ</p>
+            <p id="completed-time" class="text-sm text-cyan-600 mt-2"></p>
+          </div>
+
+          <div
+            id="no-show-state"
+            class="hidden bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center"
+          >
+            <i class="fas fa-user-times text-red-600 text-5xl mb-3"></i>
+            <h3 class="text-xl font-semibold text-red-900 mb-2">
+              ไม่พบลูกค้า (No Show)
+            </h3>
+            <p id="no-show-time" class="text-sm text-red-600 mt-2"></p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-sm text-gray-500 pt-4">
+          <p>Phuket Gevalin</p>
+          <p id="expires-at" class="text-xs">-</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Get token from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const token =
+        urlParams.get("token") || window.location.pathname.split("/").pop();
+
+      let trackingInfo = null;
+      let currentStatus = "idle";
+      let trackingInterval = null;
+      let currentLocation = null;
+      let canStartTracking = false;
+
+      // Elements
+      const els = {
+        loading: document.getElementById("loading"),
+        error: document.getElementById("error"),
+        errorMessage: document.getElementById("error-message"),
+        content: document.getElementById("content"),
+        statusBadge: document.getElementById("status-badge"),
+        bookingRef: document.getElementById("booking-ref"),
+        passengerName: document.getElementById("passenger-name"),
+        passengerPhone: document.getElementById("passenger-phone"),
+        pickupLocation: document.getElementById("pickup-location"),
+        pickupDatetime: document.getElementById("pickup-datetime"),
+        timeAdjustedBadge: document.getElementById("time-adjusted-badge"),
+        dropoffLocation: document.getElementById("dropoff-location"),
+        pax: document.getElementById("pax"),
+        flightInfoContainer: document.getElementById("flight-info-container"),
+        flightInfo: document.getElementById("flight-info"),
+        assignmentNotes: document.getElementById("assignment-notes"),
+        assignmentNotesContent: document.getElementById(
+          "assignment-notes-content"
+        ),
+        dateWarning: document.getElementById("date-warning"),
+        dateWarningTitle: document.getElementById("date-warning-title"),
+        dateWarningMessage: document.getElementById("date-warning-message"),
+        gpsStatus: document.getElementById("gps-status"),
+        gpsLat: document.getElementById("gps-lat"),
+        gpsLng: document.getElementById("gps-lng"),
+        gpsInterval: document.getElementById("gps-interval"),
+        btnStart: document.getElementById("btn-start"),
+        btnComplete: document.getElementById("btn-complete"),
+        btnNoShow: document.getElementById("btn-no-show"),
+        completedState: document.getElementById("completed-state"),
+        completedTime: document.getElementById("completed-time"),
+        noShowState: document.getElementById("no-show-state"),
+        noShowTime: document.getElementById("no-show-time"),
+        expiresAt: document.getElementById("expires-at"),
+      };
+
+      // Initialize
+      if (!token) {
+        showError("ไม่พบ token ในลิงก์");
+      } else {
+        fetchTrackingInfo();
+      }
+
+      async function fetchTrackingInfo() {
+        try {
+          const response = await fetch(`/api/tracking/info.php?token=${token}`);
+          const data = await response.json();
+
+          if (data.success) {
+            trackingInfo = data.data;
+            renderTrackingInfo();
+
+            if (trackingInfo.status === "active") {
+              currentStatus = "tracking";
+              startTracking();
+            } else if (trackingInfo.status === "completed") {
+              currentStatus = "completed";
+            }
+
+            updateUI();
+          } else {
+            showError(data.error || "ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว");
+          }
+        } catch (err) {
+          console.error("Error:", err);
+          showError("ไม่สามารถโหลดข้อมูลได้");
+        }
+      }
+
+      function renderTrackingInfo() {
+        els.bookingRef.textContent = trackingInfo.booking_ref;
+        els.passengerName.textContent = trackingInfo.booking.passenger_name;
+        els.passengerPhone.textContent = trackingInfo.booking.passenger_phone;
+        els.pickupLocation.textContent = trackingInfo.booking.pickup_location;
+        els.pickupDatetime.textContent = trackingInfo.booking.pickup_datetime;
+
+        // Show time adjusted badge if time was changed
+        if (trackingInfo.booking.is_time_adjusted) {
+          els.pickupDatetime.classList.add("text-orange-600", "font-semibold");
+          els.pickupDatetime.classList.remove("text-cyan-600");
+          els.timeAdjustedBadge.classList.remove("hidden");
+        }
+
+        els.dropoffLocation.textContent = trackingInfo.booking.dropoff_location;
+        els.pax.textContent = trackingInfo.booking.pax + " คน";
+        els.expiresAt.textContent =
+          "ลิงก์นี้จะหมดอายุ: " +
+          new Date(trackingInfo.expires_at).toLocaleString("th-TH");
+        els.gpsInterval.textContent = `ส่งตำแหน่งทุก ${trackingInfo.tracking.interval} วินาที`;
+
+        // Show flight info if available
+        const flightNo =
+          trackingInfo.booking.flight_no_arrival ||
+          trackingInfo.booking.flight_no_departure;
+        if (flightNo) {
+          els.flightInfo.textContent = flightNo;
+          els.flightInfoContainer.classList.remove("hidden");
+        }
+
+        // Show assignment notes if available
+        if (
+          trackingInfo.assignment_notes &&
+          trackingInfo.assignment_notes.trim()
+        ) {
+          els.assignmentNotesContent.textContent =
+            trackingInfo.assignment_notes;
+          els.assignmentNotes.classList.remove("hidden");
+        }
+
+        // Check if assignment is already completed
+        if (
+          trackingInfo.assignment_status === "completed" ||
+          trackingInfo.status === "completed"
+        ) {
+          currentStatus = "completed";
+        } else {
+          // Check if can start tracking based on pickup date
+          checkDateRange();
+        }
+
+        els.loading.classList.add("hidden");
+        els.content.classList.remove("hidden");
+      }
+
+      function checkDateRange() {
+        if (!trackingInfo.pickup_date) {
+          canStartTracking = true;
+          return;
+        }
+
+        const pickupDate = new Date(trackingInfo.pickup_date);
+        const now = new Date();
+
+        // Calculate allowed time range: 5 hours before pickup to +24 hours after
+        const startAllowed = new Date(pickupDate);
+        startAllowed.setHours(startAllowed.getHours() - 5); // 5 hours before pickup
+        const endAllowed = new Date(pickupDate);
+        endAllowed.setHours(endAllowed.getHours() + 24);
+
+        const formatDateTimeThai = (date) => {
+          return date.toLocaleString("th-TH", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        };
+
+        if (now < startAllowed) {
+          // Too early
+          canStartTracking = false;
+          els.dateWarning.classList.remove("hidden");
+          els.dateWarningTitle.textContent = "⏰ ยังไม่ถึงเวลาเริ่มงาน";
+          els.dateWarningMessage.innerHTML = `งานนี้สามารถเริ่มได้ตั้งแต่<br><strong>${formatDateTimeThai(
+            startAllowed
+          )}</strong><br><span class="text-xs">(5 ชั่วโมงก่อนเวลารับ)</span>`;
+        } else if (now > endAllowed) {
+          // Too late
+          canStartTracking = false;
+          els.dateWarning.classList.remove("hidden");
+          els.dateWarning.className =
+            "bg-red-50 border-2 border-red-200 rounded-xl p-4";
+          els.dateWarningTitle.textContent = "⚠️ งานนี้เลยกำหนดแล้ว";
+          els.dateWarningTitle.className = "font-semibold text-red-900 mb-1";
+          els.dateWarningMessage.className = "text-sm text-red-800";
+          els.dateWarningMessage.innerHTML = `กำหนดการเดินทาง: ${formatDateTimeThai(
+            pickupDate
+          )}<br>หน้าต่างเวลา: ${formatDateTimeThai(
+            startAllowed
+          )} - ${formatDateTimeThai(
+            endAllowed
+          )}<br>หากมีปัญหากรุณาติดต่อเจ้าหน้าที่`;
+        } else {
+          // Within allowed range (2 hours before pickup to +24 hours after)
+          canStartTracking = true;
+          els.dateWarning.classList.add("hidden");
+        }
+      }
+
+      function updateUI() {
+        if (currentStatus === "idle") {
+          els.statusBadge.textContent = "รอเริ่มงาน";
+          els.statusBadge.className =
+            "px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800";
+          els.btnStart.classList.remove("hidden");
+          els.btnStart.disabled = !canStartTracking;
+          els.btnComplete.classList.add("hidden");
+          els.btnNoShow.classList.add("hidden");
+          els.completedState.classList.add("hidden");
+          els.noShowState.classList.add("hidden");
+          els.gpsStatus.classList.add("hidden");
+        } else if (currentStatus === "tracking") {
+          els.statusBadge.textContent = "🔴 กำลังทำงาน";
+          els.statusBadge.className =
+            "px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-pulse-custom";
+          els.btnStart.classList.add("hidden");
+          els.btnComplete.classList.remove("hidden");
+          els.btnNoShow.classList.remove("hidden");
+          els.completedState.classList.add("hidden");
+          els.noShowState.classList.add("hidden");
+          els.gpsStatus.classList.remove("hidden");
+        } else if (currentStatus === "completed") {
+          els.statusBadge.textContent = "✅ เสร็จสิ้น";
+          els.statusBadge.className =
+            "px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800";
+          els.btnStart.classList.add("hidden");
+          els.btnComplete.classList.add("hidden");
+          els.btnNoShow.classList.add("hidden");
+          els.completedState.classList.remove("hidden");
+          els.noShowState.classList.add("hidden");
+          els.gpsStatus.classList.add("hidden");
+
+          // Show completed time if available
+          if (trackingInfo?.tracking?.completed_at) {
+            const completedDate = new Date(trackingInfo.tracking.completed_at);
+            els.completedTime.textContent =
+              "เสร็จสิ้นเมื่อ: " + completedDate.toLocaleString("th-TH");
+          }
+        } else if (currentStatus === "no_show") {
+          els.statusBadge.textContent = "❌ No Show";
+          els.statusBadge.className =
+            "px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800";
+          els.btnStart.classList.add("hidden");
+          els.btnComplete.classList.add("hidden");
+          els.btnNoShow.classList.add("hidden");
+          els.completedState.classList.add("hidden");
+          els.noShowState.classList.remove("hidden");
+          els.gpsStatus.classList.add("hidden");
+
+          // Show no-show time
+          els.noShowTime.textContent =
+            "แจ้งเมื่อ: " + new Date().toLocaleString("th-TH");
+        }
+      }
+
+      async function startJob() {
+        if (!canStartTracking) {
+          alert(
+            "⏰ ยังไม่สามารถเริ่มงานได้ในขณะนี้ กรุณาตรวจสอบวันที่เริ่มงาน"
+          );
+          return;
+        }
+
+        if (!navigator.geolocation) {
+          alert("อุปกรณ์นี้ไม่รองรับ GPS");
+          return;
+        }
+
+        try {
+          // Get initial location
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              // Start job
+              const response = await fetch("/api/tracking/start.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                currentStatus = "tracking";
+                updateUI();
+                await sendLocation(position);
+                startTracking();
+                alert("✅ เริ่มงานสำเร็จ! GPS กำลังส่งตำแหน่ง");
+              } else {
+                alert("❌ ไม่สามารถเริ่มงานได้: " + data.error);
+              }
+            },
+            (error) => {
+              console.error("GPS Error:", error);
+              alert("❌ ไม่สามารถเข้าถึง GPS ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        } catch (err) {
+          console.error("Start job error:", err);
+          alert("❌ ไม่สามารถเริ่มงานได้");
+        }
+      }
+
+      function startTracking() {
+        sendLocationUpdate();
+
+        if (trackingInterval) clearInterval(trackingInterval);
+
+        trackingInterval = setInterval(() => {
+          sendLocationUpdate();
+        }, (trackingInfo?.tracking?.interval || 30) * 1000);
+      }
+
+      function sendLocationUpdate() {
+        navigator.geolocation.getCurrentPosition(
+          (position) => sendLocation(position),
+          (error) => console.error("GPS Error:", error),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      }
+
+      async function sendLocation(position) {
+        const location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          status: "BEFORE_PICKUP",
+        };
+
+        currentLocation = location;
+        updateGPSDisplay(location);
+
+        try {
+          await fetch("/api/tracking/location.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, ...location }),
+          });
+        } catch (err) {
+          console.error("Error sending location:", err);
+        }
+      }
+
+      function updateGPSDisplay(location) {
+        els.gpsLat.textContent = `📍 Lat: ${location.latitude.toFixed(6)}`;
+        els.gpsLng.textContent = `📍 Lng: ${location.longitude.toFixed(6)}`;
+      }
+
+      async function completeJob(
+        status = "COMPLETED",
+        confirmMessage = "ต้องการจบงานใช่หรือไม่?",
+        successMessage = "✅ งานเสร็จสมบูรณ์!"
+      ) {
+        if (!confirm(confirmMessage)) return;
+
+        if (trackingInterval) clearInterval(trackingInterval);
+
+        // Set the final status based on job type
+        const finalStatus = status === "NO_SHOW" ? "no_show" : "completed";
+        const notes =
+          status === "NO_SHOW" ? "Customer no-show" : "Completed by driver";
+        const notesNoLocation =
+          status === "NO_SHOW"
+            ? "Customer no-show (no final location)"
+            : "Completed by driver (no final location)";
+
+        try {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const response = await fetch("/api/tracking/complete.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  token,
+                  status: status,
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  notes: notes,
+                }),
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                currentStatus = finalStatus;
+                updateUI();
+                alert(successMessage);
+              } else {
+                alert("❌ ไม่สามารถจบงานได้: " + data.error);
+              }
+            },
+            async () => {
+              // Complete without location
+              const response = await fetch("/api/tracking/complete.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  token,
+                  status: status,
+                  notes: notesNoLocation,
+                }),
+              });
+
+              const data = await response.json();
+              if (data.success) {
+                currentStatus = finalStatus;
+                updateUI();
+                alert(successMessage);
+              }
+            }
+          );
+        } catch (err) {
+          console.error("Complete job error:", err);
+          alert("❌ ไม่สามารถจบงานได้");
+        }
+      }
+
+      function showError(message) {
+        els.loading.classList.add("hidden");
+        els.errorMessage.textContent = message;
+        els.error.classList.remove("hidden");
+      }
+
+      // Event listeners
+      els.btnStart.addEventListener("click", startJob);
+      els.btnComplete.addEventListener("click", () => {
+        completeJob(
+          "COMPLETED",
+          "✅ ยืนยันว่างานเสร็จสมบูรณ์แล้วใช่หรือไม่?",
+          "✅ งานเสร็จสมบูรณ์!"
+        );
+      });
+      els.btnNoShow.addEventListener("click", () => {
+        completeJob(
+          "NO_SHOW",
+          "❌ ยืนยันว่าไม่เจอลูกค้าใช่หรือไม่?\n\nระบบจะแจ้ง Holiday Taxis ว่าลูกค้าไม่มา (No Show)",
+          "✅ แจ้ง No Show สำเร็จ!"
+        );
+      });
+    </script>
+  </body>
+</html>

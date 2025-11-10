@@ -1,0 +1,666 @@
+{
+  "success": true,
+  "data": {
+    "bookings": [
+      {
+        "ref": "HBEDS-27151992",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr MARIA JESUS NICOLAS BLASCO",
+          "phone": "34655318286"
+        },
+        "pax": 7,
+        "paxDetails": {
+          "adults": 7,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single return only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": null,
+        "departureDate": "2025-10-22 10:45:00",
+        "pickupDate": "2025-10-22 07:55:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "Ibis Styles Chiang Mai"
+        },
+        "lastActionDate": "2025-10-20 09:28:08",
+        "createdAt": "2025-10-23 02:11:56",
+        "is_assigned": 1,
+        "assignment_status": "assigned",
+        "is_old_booking": true
+      },
+      {
+        "ref": "HBEDS-26931751",
+        "status": "ACAN",
+        "passenger": {
+          "name": "Mr MARIA JESUS NICOLAS BLASCO",
+          "phone": "34655318286"
+        },
+        "pax": 7,
+        "paxDetails": {
+          "adults": 7,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single return only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": null,
+        "departureDate": "2025-10-22 10:45:00",
+        "pickupDate": "2025-10-22 07:55:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "Ibis Chiang Mai Nimman Journeyhub"
+        },
+        "lastActionDate": "2025-10-20 09:24:23",
+        "createdAt": "2025-10-23 02:11:49",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": true
+      },
+      {
+        "ref": "HYE-27140929",
+        "status": "ACON",
+        "passenger": {
+          "name": "Ms Nazia  Anwar ",
+          "phone": "00447858353175"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 1,
+          "children": 1,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-22 23:35:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-22 23:35:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "Le Meridien Khao Lak Resort & Spa"
+        },
+        "lastActionDate": "2025-10-18 11:14:41",
+        "createdAt": "2025-10-25 01:04:18",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBEDS-26557894",
+        "status": "ACAN",
+        "passenger": {
+          "name": "Mr Enrique Alberto Smith26557894",
+          "phone": "07123 26557894"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-23 20:15:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-23 20:15:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "Cmor by Recall Hotel (SHA Plus)"
+        },
+        "lastActionDate": "2025-08-17 16:58:03",
+        "createdAt": "2025-10-23 22:09:00",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBEDS-26558024",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Enrique Alberto Smith26558024",
+          "phone": "07123 26558024"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-23 20:15:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-23 20:15:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "Cmor by Recall Hotel (SHA Plus)"
+        },
+        "lastActionDate": "2025-08-17 17:14:02",
+        "createdAt": "2025-10-23 22:08:59",
+        "is_assigned": 1,
+        "assignment_status": "completed",
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-TCS-25878348",
+        "status": "AAMM",
+        "passenger": {
+          "name": "Mr Andrew Smith25878348",
+          "phone": "07123 25878348"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Koh Samui Airport",
+        "province": "Surat Thani",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-23 20:30:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-23 20:30:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Koh Samui",
+        "accommodation": {
+          "name": "Bandara Spa Resort &amp; Pool Villas, Samui"
+        },
+        "lastActionDate": "2025-09-04 17:19:24",
+        "createdAt": "2025-10-23 22:09:01",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "HTX-27174210",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr. Andy Kathage",
+          "phone": "+49 1604404223"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 07:40:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 07:40:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "ROBINSON Khao Lak"
+        },
+        "lastActionDate": "2025-10-22 19:28:49",
+        "createdAt": "2025-10-24 19:50:10",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "TCOMP-24342011",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mrs Ana Catarina Bravo Silva",
+          "phone": "+351914418163"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 2,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Krabi Airport",
+        "province": "Krabi",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 08:30:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 08:30:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Krabi Centre (Nopparat)",
+        "accommodation": {
+          "name": "Aonang Viva Resort"
+        },
+        "lastActionDate": "2025-01-25 19:04:50",
+        "createdAt": "2025-10-24 19:50:12",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-TCOMP-24342011",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mrs Ana Catarina Smith24342011",
+          "phone": "07123 24342011"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Krabi Airport",
+        "province": "Krabi",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 08:30:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 08:30:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Krabi Centre (Nopparat)",
+        "accommodation": {
+          "name": "Aonang Viva Resort"
+        },
+        "lastActionDate": "2025-01-25 19:04:50",
+        "createdAt": "2025-10-23 22:13:39",
+        "is_assigned": 1,
+        "assignment_status": "assigned",
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBLOV-26479287",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Peter Sagoo",
+          "phone": "07854259512"
+        },
+        "pax": 4,
+        "paxDetails": {
+          "adults": 2,
+          "children": 2,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Krabi Airport",
+        "province": "Krabi",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 09:00:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 09:00:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Krabi Centre (Ao Nang)",
+        "accommodation": {
+          "name": "Centara Life Phu Pano Krabi"
+        },
+        "lastActionDate": "2025-08-09 15:11:26",
+        "createdAt": "2025-10-24 19:50:14",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBLOV-26479287",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Peter Smith26479287",
+          "phone": "07123 26479287"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Krabi Airport",
+        "province": "Krabi",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 09:00:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 09:00:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Krabi Centre (Ao Nang)",
+        "accommodation": {
+          "name": "Centara Life Phu Pano Krabi"
+        },
+        "lastActionDate": "2025-08-09 15:11:26",
+        "createdAt": "2025-10-23 22:13:40",
+        "is_assigned": 1,
+        "assignment_status": "assigned",
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBLOV-26845630",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr melanie LOCK",
+          "phone": "4407779609421"
+        },
+        "pax": 6,
+        "paxDetails": {
+          "adults": 6,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Koh Samui Airport",
+        "province": "Surat Thani",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 09:20:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 09:20:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Koh Samui",
+        "accommodation": {
+          "name": "Chaba Cabana Beach Resort"
+        },
+        "lastActionDate": "2025-09-14 20:22:00",
+        "createdAt": "2025-10-24 19:50:15",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBEDS-26243268",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr JUAN CARLOS Smith26243268",
+          "phone": "07123 26243268"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Rai Airport",
+        "province": "Chiang Rai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 10:20:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 10:20:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Rai City Centre",
+        "accommodation": {
+          "name": "Laluna Hotel & Resort Chiang Rai"
+        },
+        "lastActionDate": "2025-07-18 22:55:12",
+        "createdAt": "2025-10-23 22:13:41",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBLOV-26665785",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Cheryl Buckingham",
+          "phone": "07977101596"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 2,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 10:50:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 10:50:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "Graceland Khaolak Hotel and Resort"
+        },
+        "lastActionDate": "2025-08-28 13:19:24",
+        "createdAt": "2025-10-24 19:50:17",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBLOV-26665785",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Cheryl Smith26665785",
+          "phone": "07123 26665785"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 10:50:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 10:50:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "Graceland Khaolak Hotel and Resort"
+        },
+        "lastActionDate": "2025-08-28 13:19:24",
+        "createdAt": "2025-10-23 22:13:42",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBEDS-24391859",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Cesar Cruz",
+          "phone": "+351967636365"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 2,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 11:40:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 11:40:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "MAKKACHIVA"
+        },
+        "lastActionDate": "2025-01-28 23:32:20",
+        "createdAt": "2025-10-24 19:50:19",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBEDS-24391859",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Cesar Smith24391859",
+          "phone": "07123 24391859"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Mai International Airport",
+        "province": "Chiang Mai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 11:40:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 11:40:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Chiang Mai City Centre",
+        "accommodation": {
+          "name": "MAKKACHIVA"
+        },
+        "lastActionDate": "2025-01-28 23:32:20",
+        "createdAt": "2025-10-23 22:13:43",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBEDS-26243268",
+        "status": "AAMM",
+        "passenger": {
+          "name": "Mr JUAN CARLOS JUAREZ RODRIGUEZ",
+          "phone": "528110366909"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 2,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Chiang Rai Airport",
+        "province": "Chiang Rai",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 14:55:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 14:55:00",
+        "vehicle": "Private Standard Minibus 3 - 8",
+        "resort": "Chiang Rai City Centre",
+        "accommodation": {
+          "name": "Laluna Hotel & Resort Chiang Rai"
+        },
+        "lastActionDate": "2025-10-03 16:16:36",
+        "createdAt": "2025-10-24 19:50:21",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "HBEDS-26717973",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Julia Anna Pawlowska",
+          "phone": "48506019018"
+        },
+        "pax": 2,
+        "paxDetails": {
+          "adults": 2,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 16:40:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 16:40:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "Graceland Khaolak Hotel and Resort"
+        },
+        "lastActionDate": "2025-09-02 12:49:56",
+        "createdAt": "2025-10-24 19:50:23",
+        "is_assigned": 0,
+        "assignment_status": null,
+        "is_old_booking": false
+      },
+      {
+        "ref": "Test-HBEDS-26717973",
+        "status": "ACON",
+        "passenger": {
+          "name": "Mr Julia Anna Smith26717973",
+          "phone": "07123 26717973"
+        },
+        "pax": 1,
+        "paxDetails": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0
+        },
+        "bookingType": "Single outbound only",
+        "airport": "Phuket Airport",
+        "province": "Phuket",
+        "province_source": "airport",
+        "province_confidence": "high",
+        "arrivalDate": "2025-10-24 16:40:00",
+        "departureDate": null,
+        "pickupDate": "2025-10-24 16:40:00",
+        "vehicle": "Private Standard Car 1 - 2",
+        "resort": "Khao Lak",
+        "accommodation": {
+          "name": "Graceland Khaolak Hotel and Resort"
+        },
+        "lastActionDate": "2025-09-02 12:49:56",
+        "createdAt": "2025-10-23 22:13:43",
+        "is_assigned": 1,
+        "assignment_status": "completed",
+        "is_old_booking": false
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "total_pages": 5,
+      "total_records": 100,
+      "per_page": 20,
+      "has_next": true,
+      "has_prev": false,
+      "is_default_query": true,
+      "max_default_results": 100
+    },
+    "filters": {
+      "status": "all",
+      "date_from": null,
+      "date_to": null,
+      "date_type": "pickup",
+      "search": "",
+      "limit": 20
+    },
+    "lastUpdate": "2025-10-25 10:23:31"
+  }
+}

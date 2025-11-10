@@ -1,0 +1,3069 @@
+openapi: 3.1.0
+info:
+  title: Holiday Taxis Supplier Connect
+  version: 17 Jan 2025
+  description: |-
+    Holiday Taxis Supplier Connect is an API for transfer companies that require an easy way to connect to Holiday Taxis
+    and retrieve booking information.
+    This document is aimed at developers and technical personnel who will be integrating the API.
+
+    For the detail overview documentation, see https://developer.holidaytaxis.com/supplier-connect/overview.html
+
+servers:
+  - url: "https://suppliers.holidaytaxis.com"
+    description: Production
+  - url: "https://suppliers.htxstaging.com"
+    description: Staging / Integration Testing
+security:
+  - "API_KEY": []
+tags:
+  - name: search
+  - name: booking-retrieve
+  - name: booking-update
+  - name: driver-events
+  - name: metadata
+paths:
+  "/bookings/search/since/{dateFrom}/until/{dateTo}/page/{pageNumber}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - $ref: "#/components/parameters/dateFrom"
+      - $ref: "#/components/parameters/dateTo"
+      - $ref: "#/components/parameters/pageNumber"
+    get:
+      operationId: SearchByLastAction
+      summary: Search bookings by last action date
+      tags:
+        - search
+      description: |-
+        To search for bookings based on their last action date, such as booked date, last modification or cancellation date, the following url should be used as a base using a simple GET request:
+
+        > HTTP GET:  /bookings/search
+
+        Results can be refined by passing additional parameters in the url. You can pass all or none of these parameters to achieve a required subset of results.
+
+        * HTTP GET: /bookings/search/since/:datefrom
+        * HTTP GET: /bookings/search/since/:datefrom/until/:dateto *
+        * HTTP GET: /bookings/search/page/:page
+
+        use until in combination with since, e.g. /bookings/search/since/2015-05-01T00:00/until/2015-05-10T00:00
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-search-response"
+        "204":
+          $ref: "#/components/responses/no-content-search-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+
+  "/bookings/search/arrivals/since/{dateFrom}/until/{dateTo}/page/{pageNumber}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - $ref: "#/components/parameters/dateFrom"
+      - $ref: "#/components/parameters/dateTo"
+      - $ref: "#/components/parameters/pageNumber"
+    get:
+      operationId: SearchByArrivalDate
+      summary: Search bookings by arrival date
+      tags:
+        - search
+      description: |-
+        To search for bookings based on their arrival date, the following url should be used as a base using a simple GET request:
+
+        > HTTP GET:  /bookings/search/arrivals
+
+        Results can be refined by passing additional parameters in the url. You can pass all or none of these parameters to achieve a required subset of results.
+
+        * HTTP GET: /bookings/search/arrivals/since/:datefrom
+        * HTTP GET: /bookings/search/arrivals/since/:datefrom/until/:dateto *
+        * HTTP GET: /bookings/search/arrivals/page/:page
+
+        use until in combination with since, e.g. /bookings/search/arrivals/since/2015-05-01T00:00/until/2015-05-10T00:00
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-search-response"
+        "204":
+          $ref: "#/components/responses/no-content-search-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  "/bookings/search/departures/since/{dateFrom}/until/{dateTo}/page/{pageNumber}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - $ref: "#/components/parameters/dateFrom"
+      - $ref: "#/components/parameters/dateTo"
+      - $ref: "#/components/parameters/pageNumber"
+
+    get:
+      operationId: SearchByDepartureDate
+      summary: Search bookings by departure date
+      tags:
+        - search
+      description: |-
+
+        To search for bookings based on their departure date, the following url should be used as a base using a simple GET request:
+
+        > HTTP GET:  /bookings/search/departures
+
+        Results can be refined by passing additional parameters in the url. You can pass all or none of these parameters to achieve a required subset of results.
+
+        * HTTP GET: /bookings/search/departures/since/:datefrom
+        * HTTP GET:  /bookings/search/departures/since/:datefrom/until/:dateto *
+        * HTTP GET:  /bookings/search/departures/page/:page
+
+        use until in combination with since, e.g. /bookings/search/departures/since/2015-05-01T00:00/until/2015-05-10T00:00
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-search-response"
+        "204":
+          $ref: "#/components/responses/no-content-search-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  "/bookings/{bookingRef}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - $ref: "#/components/parameters/bookingRef"
+    get:
+      operationId: RetrieveIndividualBooking
+      summary: Retrieve details of an individual booking
+      tags:
+        - booking-retrieve
+      description: |-
+        # Basic Usage
+        In order to get the details of a booking, the following url must be used via a simple GET request (substituting :ref with a known booking reference in the format AAA(AA)-11111111):
+
+        > HTTP GET:  /bookings/:ref
+
+        # Example - Booking Data
+        > HTTP GET:  /bookings/TEST-4290672
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-booking-detail-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+    put:
+      operationId: UpdateIndividualBooking
+      summary: Update details and notes of an individual booking
+      tags:
+        - booking-update
+      description: |-
+
+        # Basic Usage
+
+        In order to update the details of a booking, the following url must be used via a PUT request (substituting :ref with a known booking reference in the format AAA(AA)-11111111):
+
+        * /bookings/:ref
+
+        # Request Details
+        The details to be updated must be included as the RAW PUT DATA in either XML or JSON.
+
+        You can update any of the below details of a booking:
+
+        # Booking Status
+        Booking statuses can be updated to confirm changes in the Holiday Taxis system. 
+
+        The Details below shows which status a booking can be updated to based on it's current status.
+
+        * Current Status  :  PCON
+        * New Status : ACON
+        ##
+        * Current Status : PAMM	
+        * New Status : AAMM
+        ##
+        * Current Status : PCAN 
+        * New Status : ACAN
+
+        # Pick-up Details
+        ## For shuttles/shared transfers
+        You must confirm the pick-up date, time (in local timezone) and meeting point for the shuttle services ideally 48 to 24 hours before departure time. Once submitted, it should not be altered, unless the departure details get amended, in that case the pickup details must be updated accordingly to fit the new values.
+
+        The pick-up date and pick-up address fields should be sent inside of a departure block as per the examples at the bottom of this page.
+
+        ## For private transfers
+        You should review the pick-up date and time sent to ensure all passengers get to their destination in plenty of time. If there are issues with the supplied pick-up date and time you should raise a query by opening a "note" query
+
+        # Booking Notes
+        There are nine types of notes that can be added to a booking, as listed below:
+
+        * **Regular Note**: This is the note you wish to be added to the booking to be read by Holiday Taxis Customer Services.
+
+        * **Flight No Query**:	If you believe the flight number on the booking is incorrect/incomplete/missing, then set this to 1. When setting this to 1, you do not need to include notecontent.
+
+        * **Wrong Resort**:	If you believe the booking has been made to the wrong resort then set this to 1.
+                        **You will need to include notecontent explaining which resort the booking should be corrected to.**
+
+        * **Mandatory Child Seat Query**:	Indicates that child seat(s) is mandatory for the booking and that action may be required by the customer. Accepted values are 1 or 0, ‘notecontent’ is optional. The request is optional to use.
+        * **Missing Accommodation Query**:	Indicates that the booking is missing accommodation name or details. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **Missing Ship Name Query**:	Indicates that the booking is missing the cruise ship name or details. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **Shuttle to Private Address Query**:	Indicates that the booking needs to be upgraded from a shuttle to a private transfer due to being booked to private address or other non-compliant address. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **No Show Arrival**:	Indicates that the passenger did not board the arrival journey transfer. Accepted values is 1. The request may only be used after the pick-up time for the arrival journey has passed. In case it is used prior to this, the response will indicate that the request was not accepted. The request is optional to use.
+        * **No Show Departure**:	Indicates that the passenger did not board the departure journey transfer. Accepted values is 1. The request may only be used after the pick-up time for the departure journey has passed. In case it is used prior to this, the response will indicate that the request was not accepted. The request is optional to use
+
+        The Update Individual Bookings operation returns the same response format as the Retrieve Individual Booking operation, representing the new details of the booking after the amendment was applied.
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-booking-detail-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/booking-request-update-individual"
+            example:
+              request:
+                status: AAMM
+                newpickupaccom: Hotel Hilton
+                newpickupaddress1: Sandreen street
+                newpickupaddress2: TEST
+                newpickupaddress3: TEST
+                departure:
+                  pickupdate: "2015-05-14T20:00:00"
+                notes:
+                  - notecontent: ""
+                    flightnoquery: "1"
+                    wrongresort: "0"
+                    mandatorychildseat: "0"
+                    missingaccommodation: "1"
+                    missingcruiseshipname: "0"
+                    shuttletoprivateaddress: "0"
+                    noshowarrival: "0"
+                    noshowdeparture: "0"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/booking-request-update-individual"
+            example: |-
+              <?xml version="1.0" encoding="UTF-8"?>
+              <request>
+                <status>AAMM</status>
+                <newpickupaccom>Hotel Hilton</newpickupaccom>
+                <newpickupaddress1>Sandreen street</newpickupaddress1>
+                <newpickupaddress2>TEST </newpickupaddress2>
+                <newpickupaddress3>TEST </newpickupaddress3>
+                <departure>
+                  <pickupdate>2015-05-14T20:00:00</pickupdate>
+                </departure>
+                <notes>
+                  <note>
+                    <notecontent />
+                    <flightnoquery>1</flightnoquery>
+                    <wrongresort>0</wrongresort>
+                    <mandatorychildseat>0</mandatorychildseat>
+                    <missingaccommodation>0</missingaccommodation>
+                    <missingcruiseshipname>0</missingcruiseshipname>
+                    <shuttletoprivateaddress>0</shuttletoprivateaddress>
+                    <noshowarrival>0</noshowarrival>
+                    <noshowdeparture>0</noshowdeparture>
+                  </note>
+                </notes>
+              </request>
+
+  "/bookings/notes/{bookingRef}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - $ref: "#/components/parameters/bookingRef"
+    get:
+      operationId: RetrieveBookingNotes
+      summary: Retrieve the notes on a booking
+      tags:
+        - booking-retrieve
+      description: |-
+        ### Notes
+        To retrieve the notes for a booking, use /bookings/notes/:ref  (substituting :ref with a known booking reference in the format AAA(AA)-11111111):
+
+        ### Example - Booking Data
+        * /bookings/notes/TEST-4290672
+
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-booking-note-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  "/bookings":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+    post:
+      operationId: UpdateMultipleBookings
+      summary: Update details and notes of multiple bookings
+      tags:
+        - booking-update
+      description: |-
+        # Basic Usage
+        In order to update the details of multiple bookings, the following url must be used via a POST request:
+
+        > HTTP POST: /bookings
+
+        ## Request Details
+        The details to be updated must be included as the RAW POST DATA in either XML or JSON.
+
+        You can update any of the below details of a booking:
+
+        ## Booking Status
+        Booking statuses can be updated to confirm changes in the Holiday Taxis system. The details below shows which status a booking can be updated to based on it's current status.
+
+        * Current Status  :  PCON
+        * New Status : ACON
+        ##
+        * Current Status : PAMM	
+        * New Status : AAMM
+        ##
+        * Current Status : PCAN 
+        * New Status : ACAN
+
+        ## Pick-up Details
+        For shuttles/shared transfers
+        You must confirm the pick-up date, time (in local timezone) and meeting point for the shuttle services ideally 48 to 24 hours before departure time. Once submitted, it should not be altered, unless the departure details get amended, in that case the pickup details must be updated accordingly to fit the new values.
+
+        The pick-up date and pick-up address fields should be sent inside of a departure block as per the examples at the bottom of this page.
+
+        ## For private transfers
+        You should review the pick-up date and time sent to ensure all passengers get to their destination in plenty of time. If there are issues with the supplied pick-up date and time you should raise a query by opening a "note" query
+
+        ## Booking Notes
+        There are nine types of notes that can be added to a booking, as listed below:
+
+         * **Regular Note**: This is the note you wish to be added to the booking to be read by Holiday Taxis Customer Services.
+
+        * **Flight No Query**:	If you believe the flight number on the booking is incorrect/incomplete/missing, then set this to 1. When setting this to 1, you do not need to include notecontent.
+
+        * **Wrong Resort**:	If you believe the booking has been made to the wrong resort then set this to 1.
+                        **You will need to include notecontent explaining which resort the booking should be corrected to.**
+
+        * **Mandatory Child Seat Query**:	Indicates that child seat(s) is mandatory for the booking and that action may be required by the customer. Accepted values are 1 or 0, ‘notecontent’ is optional. The request is optional to use.
+        * **Missing Accommodation Query**:	Indicates that the booking is missing accommodation name or details. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **Missing Ship Name Query**:	Indicates that the booking is missing the cruise ship name or details. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **Shuttle to Private Address Query**:	Indicates that the booking needs to be upgraded from a shuttle to a private transfer due to being booked to private address or other non-compliant address. Accepted values are 1 or 0, 'notecontent' is optional. The request is optional to use.
+        * **No Show Arrival**:	Indicates that the passenger did not board the arrival journey transfer. Accepted values is 1. The request may only be used after the pick-up time for the arrival journey has passed. In case it is used prior to this, the response will indicate that the request was not accepted. The request is optional to use.
+        * **No Show Departure**:	Indicates that the passenger did not board the departure journey transfer. Accepted values is 1. The request may only be used after the pick-up time for the departure journey has passed. In case it is used prior to this, the response will indicate that the request was not accepted. The request is optional to use
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-booking-update-multiple-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/booking-request-update-multiple"
+            examples:
+              "Status Only":
+                value:
+                  bookings:
+                    - ref: TEST-12341234
+                      status: ACON
+                    - ref: TEST-12340011
+                      status: AAMM
+                    - ref: TEST-12349999
+                      status: ACAN
+              "Pickup and Notes":
+                value:
+                  bookings:
+                    - ref: TEST-12341234
+                      status: ACON
+                      newpickupaccom: United Kingdom
+                      newpickupaddress1: Suite B 2nd Floor TEST
+                      newpickupaddress2: 13 TEST Street
+                      newpickupaddress3: TEST
+                      departure:
+                        pickupdate: "2023-06-08T11:45:00"
+                      notes:
+                        note:
+                          notecontent:
+                            Confirm booking. Update pickup time, address and raise wrong resort
+                            and flight no query
+                          flightnoquery: 1
+                          wrongresort: 1
+                    - ref: TEST-12001200
+                      status: ACON
+                      newpickupaccom: United Kingdom
+                      newpickupaddress1: Suite B 2nd Floor TEST
+                      newpickupaddress2: 13 TEST Street
+                      newpickupaddress3: TEST
+                      departure:
+                        pickupdate: "2023-07-09T21:10:00"
+                      notes:
+                        note:
+                          notecontent:
+                            Confirm booking. Update pickup time, address and raise wrong resort
+                            and flight no query
+                          flightnoquery: 1
+                          wrongresort: 1
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/booking-request-update-multiple"
+            examples:
+              "Status Only":
+                value: |-
+                  <?xml version="1.0" encoding="UTF-8"?>
+                  <request>
+                    <bookings>
+                      <booking>
+                        <ref>TEST-12341234</ref>
+                        <status>ACON</status>
+                      </booking>
+                      <booking>
+                        <ref>TEST-12340011</ref>
+                        <status>AAMM</status>
+                      </booking>
+                      <booking>
+                        <ref>TEST-12349999</ref>
+                        <status>ACAN</status>
+                      </booking>
+                    </bookings>
+                  </request>
+
+              "Pickup and Notes":
+                value: |-
+                  <?xml version="1.0" encoding="UTF-8"?>
+                  <request>
+                    <bookings>
+                      <booking>
+                        <ref>TEST-12341234</ref>
+                        <status>ACON</status>
+                        <newpickupaccom>United Kingdom</newpickupaccom>
+                        <newpickupaddress1>Suite B 2nd Floor TEST</newpickupaddress1>
+                        <newpickupaddress2>13 TEST Street </newpickupaddress2>
+                        <newpickupaddress3>TEST </newpickupaddress3>
+                        <departure>
+                          <pickupdate>2023-06-08T11:45:00</pickupdate>
+                        </departure>
+                        <notes>
+                          <note>
+                            <notecontent>Confirm booking. Update pickup time, address and raise wrong resort and flight no query</notecontent>
+                            <flightnoquery>1</flightnoquery>
+                            <wrongresort>1</wrongresort>
+                          </note>
+                        </notes>
+                      </booking>
+                      <booking>
+                        <ref>TEST-12001200</ref>
+                        <status>ACON</status>
+                        <newpickupaccom>United Kingdom</newpickupaccom>
+                        <newpickupaddress1>Suite B 2nd Floor TEST</newpickupaddress1>
+                        <newpickupaddress2>13 TEST Street </newpickupaddress2>
+                        <newpickupaddress3>TEST </newpickupaddress3>
+                        <departure>
+                          <pickupdate>2023-07-09T21:10:00</pickupdate>
+                        </departure>
+                        <notes>
+                          <note>
+                            <notecontent>Confirm booking. Update pickup time, address and raise wrong resort and flight no query</notecontent>
+                            <flightnoquery>1</flightnoquery>
+                            <wrongresort>1</wrongresort>
+                          </note>
+                        </notes>
+                      </booking>
+                    </bookings>
+                  </request>
+  "/bookings/reconfirm":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+    post:
+      operationId: ReconfirmMultipleBookings
+      summary: Reconfirm multiple bookings
+      tags:
+        - booking-update
+      description: |-
+        # Basic Usage
+        In order to reconfirm multiple bookings, the following url must be used via a POST request:
+
+
+        > HTTP POST: /bookings/reconfirm
+
+        # Request Details
+        The details to be updated must be included as the **RAW POST DATA**  in either XML or JSON.
+
+        You can update any of the below details of a booking:
+
+        # Pick-up time
+        A booking's pick-up time (in local timezone) can be confirmed or updated. The default pickup time on bookings is based on the estimated travel time to the destination and the check-in time required at the destination airport, port, train station, etc. (if applicable).
+
+        It is **highly recommended** that the pick-up time is reviewed on ALL bookings to ensure all passengers get to their destination in plenty of time.
+
+        # Name and Address of Pick-up Accommodation
+        The name and address of a booking's pick-up accommodation can be updated if they are different from the details currently on the booking.
+
+
+        Details are currently documented here: https://developer.holidaytaxis.com/supplier-connect/update-reconfirm.html
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/successful-booking-reconfirm-response"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/booking-request-reconfirm"
+            example:
+              bookings:
+                - ref: TEST-1444774
+                  newpickuphour: "10"
+                  newpickupmin: "10"
+                  newpickupaccom: Suite B 2nd Floor TEST
+                  newpickupaddress1: 13 TEST Street
+                  newpickupaddress2: TEST
+                  newpickupaddress3: TEST
+                - ref: TEST-1445784
+                  newpickuphour: "22"
+                  newpickupmin: "20"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/booking-request-reconfirm"
+            examples:
+              "Status Only":
+                value: |-
+                  <?xml version="1.0" encoding="UTF-8"?>
+                  <request>
+                    <booking>
+                      <ref>TEST-1444774</ref>
+                      <newpickuphour>10</newpickuphour>
+                      <newpickupmin>10</newpickupmin>
+                      <newpickupaccom>Suite B 2nd Floor TEST</newpickupaccom>
+                      <newpickupaddress1>13 TEST Street </newpickupaddress1>
+                      <newpickupaddress2>TEST </newpickupaddress2>
+                      <newpickupaddress3>TEST </newpickupaddress3>
+                    </booking>
+                    <booking>
+                      <ref>TEST-1445784</ref>
+                      <newpickuphour>22</newpickuphour>
+                      <newpickupmin>20</newpickupmin>
+                    </booking>
+                  </request>
+  "/bookings/{bookingRef}/vehicles/{vehicleIdentifier}":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-min-2025-01"
+      - $ref: "#/components/parameters/bookingRef-syntheticTesting"
+      - $ref: "#/components/parameters/vehicleIdentifier"
+    put:
+      operationId: SetDriverAndVehicle
+      summary: Provide driver and vehicle details for a booking
+      tags:
+        - driver-events
+      description: |-
+        This request allows the supplier to provide information about the driver(s) and vehicle(s) assigned to a booking.
+        Holiday Taxis will then share this directly with the customer, so that they can contact or locate the driver
+        at the pickup point.
+
+        Details of how this will be communicated to the customer are subject to change, and suppliers are encouraged
+        to supply as much information as they have available to avoid needing later changes as recommendations evolve.
+
+        Please inform [spm@holidaytaxis.com](mailto:spm@holidaytaxis.com) if you are planning to start sending any Driver Events data.
+
+        This request should normally be sent once per vehicle per booking.
+
+        It is requested that details are provided in English where applicable, e.g. for the "color" and "description" fields.
+
+        Please also see the [Driver events booking flow](/supplier-connect/booking-flow.html)
+        ### Vehicle Identifiers
+
+        The `vehicleIdentifier` allows the system to distinguish between multiple vehicles fulfilling one booking,
+        and to link the contact, vehicle, status, and location for that vehicle.
+
+        The identifier for each physical vehicle or driver should be unique within a booking, but does not need to be
+        consistent between bookings.
+
+        Integrators are free to use any identifier that is convenient, subject to the following constraints:
+
+        - Each identifier must be no longer than 40 characters.
+        - Each identifier must contain only characters unreserved in URIs (as defined by RFC 3986): uppercase and lowercase
+          letters, decimal digits, hyphen, period, underscore, and tilde.
+
+        Integrators must store (or be able to predictably regenerate) this vehicleIdentifier in their system for future requests.
+
+        Examples of identifiers which could be used:
+
+        - A number incremented within the booking for each vehicle added or replaced, e.g. `/bookings/HTX-12345678/vehicles/3`
+        - An internal identifier for the vehicle or transfer from a fleet management system, e.g. `/bookings/HTX-12345678/vehicles/to_pr_jo_03`
+          or `/bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53`
+        - The registration plate of the vehicle, e.g. `/bookings/HTX-12345678/vehicles/AB-123-XYZ`
+        - The driver's internal username, e.g. `/bookings/HTX-12345678/vehicles/j.smith`
+        - A hash of an identifier which you do not want to expose, or which would not meet the length and character requirements,
+          e.g. calculate `sha_256('minnie.driver@example.com')` and shorten to `/bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0`
+
+        Within a booking, the number of distinct vehicle identifiers in use must not exceed the number of vehicles
+        requested by the customer (as indicated by `novehicles` when retrieving the booking information).
+        If a replacement vehicle is allocated to the booking, a `DELETE /bookings/{bookingRef}/vehicles/{vehicleIdentifier}`
+        request should be sent, and the new vehicle should be given a new identifier.
+
+        Additional requests for the same vehicle identifier on the same booking will overwrite all previous values, even if a field is omitted or null
+        in the new request. For example, if no driver name is provided in the request, any previous driver name for that
+        vehicle on that booking will be deleted.
+
+        ### Example flow: Provide contact details when driver is assigned
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0
+        { "driver": { "phoneNumber": "+441273828200" } }
+        ```
+
+        ### Example flow: Extended driver and vehicle details
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/AB-123-XYZ
+        {
+          "driver": {
+            "name": "Joe", "licenseNumber": "A42", "phoneNumber": "+441273828200", "preferredContactMethod": "VOICE", "contactMethods": ["VOICE", "SMS", "WHATSAPP"]
+          },
+          "vehicle": { "brand": "Toyota", "model": "Prius", "color": "cyan", "description": "Branded with 'Acme Transfers'", "registration": "AB-123-XYZ" }
+        }
+        ```
+
+        ### Example flow: Provide details of each vehicle and driver when customer has requested 3 taxis
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/1
+        {
+          "driver": { "name": "Joe", "phoneNumber": "+4401111222333", "preferredContactMethod": "VOICE", "contactMethods": ["VOICE", "SMS", "VIBER"] },
+          "vehicle": { "brand": "Toyota", "model": "Prius", "color": "cyan", "description": "Branded with 'Acme Transfers'", "registration": "AB-123-XYZ" }
+        }
+        PUT /bookings/HTX-12345678/vehicles/2
+        {
+          "driver": { "name": "Sue", "phoneNumber": "+4401111444555", "preferredContactMethod": "VOICE", "contactMethods": ["VOICE", "SMS", "VIBER"] },
+          "vehicle": { "brand": "Toyota", "model": "Prius", "color": "red", "description": "Branded with 'Acme Transfers'", "registration": "AB-456-JKL" }
+        }
+        PUT /bookings/HTX-12345678/vehicles/3
+        {
+          "driver": { "name": "Alex", "phoneNumber": "+4401111666777", "preferredContactMethod": "VOICE", "contactMethods": ["VOICE", "SMS", "VIBER"] },
+          "vehicle": { "brand": "Vauxhall", "model": "Astra", "color": "pink", "registration": "AB-789-PQR" }
+        }
+        ```
+
+        #### Example flow: Re-allocating a driver/vehicle in a two-vehicle booking
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/jo_03
+        { "driver": { "name": "Joe", "phoneNumber": "+4401111222333" } }
+        PUT /bookings/HTX-12345678/vehicles/sa_07
+        { "driver": { "name": "Sam", "phoneNumber": "+4401111444555" } }
+        ...
+        DELETE /bookings/HTX-12345678/vehicles/sa_07
+        PUT /bookings/HTX-12345678/vehicles/al_01
+        { "driver": { "name": "Alex", "phoneNumber": "+4401111666777" } }
+        ```
+
+        ### XML request example
+
+        ```xml
+        <?xml version="1.0" encoding="UTF-8"?>
+        <request>
+          <driver>
+            <phoneNumber>+441273828200</phoneNumber>
+            <preferredContactMethod>VOICE</preferredContactMethod>
+            <contactMethods>
+              <contactMethod>VOICE</contactMethod>
+              <contactMethod>SMS</contactMethod>
+            </contactMethods>
+          </driver>
+          <vehicle>
+            <color>Red</color>
+            <description>White stripe on front &amp; sides</description>
+          </vehicle>
+        </request>
+        ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              xml:
+                name: request
+              required:
+                - driver
+              properties:
+                driver:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - phoneNumber
+                    - preferredContactMethod
+                  properties:
+                    name:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: The name of the driver assigned to the booking
+                      example: Joe
+                    phoneNumber:
+                      type: string
+                      description: A phone number which the customer can use to contact the driver directly, in international E.164 format
+                      pattern: "^\\+[1-9]\\d{1,14}$"
+                      example: "+441273828200"
+                    preferredContactMethod:
+                      $ref: "#/components/schemas/contact-method"
+                      description: The driver's preferred contact method
+                    contactMethods:
+                      type: array
+                      xml:
+                        wrapped: true
+                      items:
+                        $ref: "#/components/schemas/contact-method"
+                        xml:
+                          name: contactMethod
+                    licenseNumber:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: A license number issued to the driver by a relevant local authority
+                      example: A42
+                vehicle:
+                  type: object
+                  additionalProperties: false
+                  minProperties: 1
+                  properties:
+                    brand:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: The manufacturer or brand of the vehicle
+                      example: Toyota
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: The model of the vehicle
+                      example: Prius
+                    color:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: The main color of the vehicle (in English)
+                      example: cyan
+                    description:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: Any additional description of the vehicle (in English)
+                      example: Branded with 'Acme Transfers'
+                    registration:
+                      type: string
+                      minLength: 1
+                      maxLength: 256
+                      description: The registration / license plate of the vehicle
+                      example: AB-123-XYZ
+            example:
+              {
+                "driver":
+                  {
+                    "name": "Joe",
+                    "licenseNumber": 42,
+                    "phoneNumber": "+441273828200",
+                    "preferredContactMethod": "VOICE",
+                    "contactMethods": ["VOICE", "SMS", "WHATSAPP"],
+                  },
+                "vehicle":
+                  {
+                    "brand": "Toyota",
+                    "model": "Prius",
+                    "color": "cyan",
+                    "description": "Branded with 'Acme Transfers'",
+                    "registration": "AB-123-XYZ",
+                  },
+              }
+          application/xml:
+            # This long reference allows us to re-use the JSON definition for XML ("~1" is the escape for "/" in JSON Pointer)
+            $ref: "#/paths/~1bookings~1{bookingRef}~1vehicles~1{vehicleIdentifier}/put/requestBody/content/application~1json"
+            example: |-
+              <?xml version="1.0" encoding="UTF-8"?>
+              <request>
+                <driver>
+                  <phoneNumber>+441273828200</phoneNumber>
+                  <preferredContactMethod>VOICE</preferredContactMethod>
+                  <contactMethods>
+                    <contactMethod>VOICE</contactMethod>
+                    <contactMethod>SMS</contactMethod>
+                  </contactMethods>
+                </driver>
+                <vehicle>
+                  <color>Red</color>
+                  <description>White stripe on front &amp; sides</description>
+                </vehicle>
+              </request>
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/success-acknowledgement"
+        "202":
+          $ref: "#/components/responses/success-non-committal"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+    delete:
+      operationId: DeallocateVehicleAndDriver
+      summary: De-allocate a vehicle and driver from a booking
+      tags:
+        - driver-events
+      description: |-
+        As described under `PUT /bookings/{bookingRef}/vehicles/{vehicleIdentifier}`, a vehicle identifier is associated
+        with all vehicle, driver, status, and location information, to distinguish multiple vehicles fulfilling one booking.
+
+        If a change in circumstances means that a new vehicle is being allocated to the booking, this operation can be used
+        to indicate that information associated with a vehicle identifier is no longer applicable.
+        The replacement vehicle can then be allocated by sending a new vehicle identifier in a
+        `PUT /bookings/{bookingRef}/vehicles/{vehicleIdentifier}` or
+        `POST /bookings/{bookingRef}/vehicles/{vehicleIdentifier}/location` request.
+
+        Please inform [spm@holidaytaxis.com](mailto:spm@holidaytaxis.com) if you are planning to start sending any Driver Events data.
+
+        No information for a de-allocated vehicle will be shown to the customer, but some anonymised history may be retained
+        for use in later investigations, in line with the Holiday Taxis data protection policy.
+
+        Note that it is only necessary to de-allocate vehicles from future or in progress bookings. Once a booking has 
+        been completed, the information will no longer be shown to the customer, and will be automatically deleted or 
+        anonymised in line with the Holiday Taxis data protection policy.
+
+        ### Example flow: Re-allocating a vehicle after providing both contact and location
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/jo_03
+        { "driver": { "name": "Joe", "phoneNumber": "+4401111222333" } }
+        POST /bookings/HTX-12345678/vehicles/jo_03/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/jo_03/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 } }
+        ...
+        DELETE /bookings/HTX-12345678/vehicles/jo_03
+        PUT /bookings/HTX-12345678/vehicles/al_01
+        { "driver": { "name": "Alex", "phoneNumber": "+4401111666777" } }
+        POST /bookings/HTX-12345678/vehicles/al_01/location
+        { "timestamp": "2019-08-17T12:30:06+00:00", "location": {"lat": 35.815875, "lng": -85.363947 } }
+        ```
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/success-acknowledgement"
+        "202":
+          $ref: "#/components/responses/success-non-committal"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  "/bookings/{bookingRef}/vehicles/{vehicleIdentifier}/location":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-min-2025-01"
+      - $ref: "#/components/parameters/bookingRef-syntheticTesting"
+      - $ref: "#/components/parameters/vehicleIdentifier"
+    post:
+      operationId: SetVehicleLocation
+      summary: Provide current location of a vehicle
+      tags:
+        - driver-events
+      description: |-
+        This operation is used to provide live status and location information, which will be shared with the customer,
+        and may be stored for use in later enquiries.
+
+        Each request must include either a status, a location, or both.
+
+        Please inform [spm@holidaytaxis.com](mailto:spm@holidaytaxis.com) if you are planning to start sending any Driver Events data.
+
+        If available, a new status should be sent when the driver arrives at the pickup point (WAITING_FOR_CUSTOMER),
+        once the customer is on board (AFTER_PICKUP), and once the customer has been dropped off (COMPLETED).
+
+        If available, a new location should be sent every 5 seconds until the transfer is completed. However, if this
+        update frequency is not possible, you must provide a location at least every 60 seconds.
+        Each request may include a status, even if it has not changed; if the status is not provided, it is assumed
+        that the last status sent is still accurate.
+
+        The `vehicleIdentifier` must be used to distinguish status and location information when a booking is fulfilled
+        by multiple vehicles (as indicated by `novehicles` when retrieving the booking information). For details, see
+        the description of `PUT /bookings/{bookingRef}/vehicles/{vehicleIdentifier}`.
+
+        It is not required to send a `PUT /bookings/{bookingRef}/vehicles/{vehicleIdentifier}` request before sending
+        status or location information, but the `vehicleIdentifier` values used must be consistent across both operations.
+
+        Please also see the [Driver events booking flow](/supplier-connect/booking-flow.html)
+
+        ### Example flow: Update status at key points in the transfer
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "status": "BEFORE_PICKUP" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0/location
+        { "timestamp": "2019-08-17T12:55:15+00:00", "status": "WAITING_FOR_CUSTOMER" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0/location
+        { "timestamp": "2019-08-17T13:10:50+00:00", "status": "AFTER_PICKUP" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/81c35bb182ed10e371b0/location
+        { "timestamp": "2019-08-17T13:57:25+00:00", "status": "COMPLETED" }
+        ```
+
+        ### Example flow: Location tracking - send a vehicle location every 5-60 seconds
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/AB-123-XYZ/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 } }
+        POST /bookings/HTX-12345678/vehicles/AB-123-XYZ/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/AB-123-XYZ/location
+        { "timestamp": "2019-08-17T12:55:15+00:00", "location": {"lat": 50.82107, "lng": -0.141368 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/AB-123-XYZ/location
+        { "timestamp": "2019-08-17T13:10:50+00:00", "location": {"lat": 50.82106, "lng": -0.141369 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/AB-123-XYZ/location
+        { "timestamp": "2019-08-17T13:57:25+00:00", "location": {"lat": 50.82105, "lng": -0.141370 } }
+        ```
+
+        ### Example flow: Combined status and location
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 }, "status": "BEFORE_PICKUP" }
+        POST /bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 }, "status": "BEFORE_PICKUP" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53/location
+        { "timestamp": "2019-08-17T12:55:15+00:00", "location": {"lat": 50.82107, "lng": -0.141368 }, "status": "WAITING_FOR_CUSTOMER" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53/location
+        { "timestamp": "2019-08-17T13:10:50+00:00", "location": {"lat": 50.82106, "lng": -0.141369 }, "status": "AFTER_PICKUP" }
+        ...
+        POST /bookings/HTX-12345678/vehicles/bc9f89ab-285f-410e-913e-464d4adbaa53/location
+        { "timestamp": "2019-08-17T13:57:25+00:00", "location": {"lat": 50.82105, "lng": -0.141370 }, "status": "COMPLETED" }
+        ```
+
+        ### Example flow: Separate status and location updates
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "status": "BEFORE_PICKUP" }
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 } }
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T12:55:15+00:00", "status": "WAITING_FOR_CUSTOMER" }
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T12:55:15+00:00", "location": {"lat": 50.82107, "lng": -0.141368 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T13:10:50+00:00", "status": "AFTER_PICKUP" }
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T13:10:50+00:00", "location": {"lat": 50.82106, "lng": -0.141369 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T13:57:25+00:00", "location": {"lat": 50.82105, "lng": -0.141370 } }
+        POST /bookings/HTX-12345678/vehicles/j.smith/location
+        { "timestamp": "2019-08-17T13:57:25+00:00", "status": "COMPLETED" }
+        ```
+
+        ### Example flow: Location requests for two vehicles fulfilling the same booking
+
+        Note that requests can be sent in any order, as long as each vehicle is consistently identified.
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/1/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 } }
+        POST /bookings/HTX-12345678/vehicles/2/location
+        { "timestamp": "2019-08-17T12:30:01+00:00", "location": {"lat": -77.850001, "lng": 166.715469 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/1/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 } }
+        POST /bookings/HTX-12345678/vehicles/2/location
+        { "timestamp": "2019-08-17T12:30:06+00:00", "location": {"lat": -77.850002, "lng": 166.715468 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/2/location
+        { "timestamp": "2019-08-17T12:30:11+00:00", "location": {"lat": -77.850003, "lng": 166.715469 } }
+        POST /bookings/HTX-12345678/vehicles/1/location
+        { "timestamp": "2019-08-17T12:30:12+00:00", "location": {"lat": 50.82107, "lng": -0.141368 } }
+        ```
+
+        ### Example flow: Re-allocating a driver/vehicle in a two-vehicle booking
+
+        ```
+        POST /bookings/HTX-12345678/vehicles/jo_03/location
+        { "timestamp": "2019-08-17T12:30:00+00:00", "location": {"lat": 50.82109, "lng": -0.141366 } }
+        POST /bookings/HTX-12345678/vehicles/sa_07/location
+        { "timestamp": "2019-08-17T12:30:01+00:00", "location": {"lat": -77.850001, "lng": 166.715469 } }
+        ...
+        POST /bookings/HTX-12345678/vehicles/jo_03/location
+        { "timestamp": "2019-08-17T12:30:05+00:00", "location": {"lat": 50.82108, "lng": -0.141367 } }
+        DELETE /bookings/HTX-12345678/vehicles/sa_07
+        POST /bookings/HTX-12345678/vehicles/al_01/location
+        { "timestamp": "2019-08-17T12:30:06+00:00", "location": {"lat": 35.815875, "lng": -85.363947 } }
+        ```
+
+        ### XML request example
+
+        ```
+        <?xml version="1.0" encoding="UTF-8"?>
+        <request>
+          <timestamp>2019-08-17T12:55:15+00:00</timestamp>
+          <location><lat>-77.850001</lat><lng>166.715469</lng></location>
+          <status>WAITING_FOR_CUSTOMER</status>
+        </request>
+        ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              xml:
+                name: request
+              additionalProperties: false
+              required:
+                - timestamp
+              minProperties: 2
+              properties:
+                timestamp:
+                  type: string
+                  description: |-
+                    The time at which the vehicle reported the given location, in UTC (+00:00).
+
+                    Times in the future, or more than 10 seconds in the past, will be rejected.
+                  format: date-time
+                  example: "2019-08-17T13:05:42+00:00"
+                location:
+                  type: object
+                  description: Location of the vehicle. Must be provided if "status" is not.
+                  additionalProperties: false
+                  required:
+                    - lat
+                    - lng
+                  properties:
+                    lat:
+                      type: number
+                      description: |-
+                        The decimal latitude of the vehicle's current location.
+
+                        Expected accuracy is between 4 and 6 decimal places.
+                      minimum: -90
+                      maximum: 90
+                      example: 50.821090
+                    lng:
+                      type: number
+                      description: |-
+                        The decimal longitude of the vehicle's current location.
+
+                        Expected accuracy is between 4 and 6 decimal places.
+                      minimum: -180
+                      maximum: 180
+                      example: -0.141366
+                status:
+                  type: string
+                  description: |-
+                    Describes the current status of the transfer relative to the customer pickup.
+                    Must be provided if "location" is not.
+
+                    Values accepted:
+
+                    * BEFORE_PICKUP: initial status, while driving to the pickup location
+                    * WAITING_FOR_CUSTOMER: the driver has reached the pickup location, but the customer is not yet on board
+                    * AFTER_PICKUP: the customer has boarded the vehicle, and it is driving to the dropoff location
+                    * COMPLETED: the vehicle has reached the dropoff location, and no more location information will be sent
+                    * NO_SHOW: the customer has not shown up at the pickup point, and the vehicle will no longer wait for them
+                  enum:
+                    - BEFORE_PICKUP
+                    - WAITING_FOR_CUSTOMER
+                    - AFTER_PICKUP
+                    - COMPLETED
+                    - NO_SHOW
+            example:
+              {
+                "timestamp": "2019-08-17T12:30:00+00:00",
+                "location": { "lat": 50.82109, "lng": -0.141366 },
+                "status": "BEFORE_PICKUP",
+              }
+          application/xml:
+            # This long reference allows us to re-use the JSON definition for XML ("~1" is the escape for "/" in JSON Pointer)
+            $ref: "#/paths/~1bookings~1{bookingRef}~1vehicles~1{vehicleIdentifier}~1location/post/requestBody/content/application~1json"
+            example: |-
+              <?xml version="1.0" encoding="UTF-8"?>
+              <request>
+                <timestamp>2019-08-17T12:55:15+00:00</timestamp>
+                <location><lat>-77.850001</lat><lng>166.715469</lng></location>
+                <status>WAITING_FOR_CUSTOMER</status>
+              </request>
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/success-acknowledgement"
+        "202":
+          $ref: "#/components/responses/success-non-committal"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  "/bookings/{bookingRef}/vehicles":
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-min-2025-01"
+      - $ref: "#/components/parameters/bookingRef-syntheticTesting"
+    delete:
+      operationId: DeallocateAllVehiclesAndDrivers
+      summary: De-allocate all vehicles and drivers from a booking
+      tags:
+        - driver-events
+      description: |-
+        As described under `PUT /bookings/{bookingRef}/vehicles/{vehicleIdentifier}`, a vehicle identifier is associated
+        with all vehicle, driver, status, and location information, to distinguish multiple vehicles fulfilling one booking.
+        This identifier must then be re-used to update details, or "de-allocated" from the booking by calling 
+        `DELETE /bookings/{bookingRef}/vehicles/{vehicleIdentifier}`
+
+        In some situations, it may be necessary or convenient to de-allocate all vehicles from a booking in a single call.
+        For example, the original vehicle identifier used may have been lost, and a new set of data needs to be provided.
+
+        In this case, a `DELETE /bookings/{bookingRef}/vehicles` request (with no vehicle identifier) may be used. This
+        has the same effect as calling `DELETE /bookings/{bookingRef}/vehicles/{vehicleIdentifier}` for each vehicle
+        identifier previously used on that booking: no information previously sent will be shown to the customer, 
+        but some anonymised history may be retained for use in later investigations, in line with the Holiday Taxis 
+        data protection policy.
+
+        Note that it is only necessary to de-allocate vehicles from future or in progress bookings. Once a booking has 
+        been completed, the information will no longer be shown to the customer, and will be automatically deleted or 
+        anonymised in line with the Holiday Taxis data protection policy.
+
+        Please inform [spm@holidaytaxis.com](mailto:spm@holidaytaxis.com) if you are planning to start sending any Driver Events data.
+
+        ### Example flow: Re-allocating both drivers/vehicles in a two-vehicle booking
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/jo_03
+        { "driver": { "name": "Joe", "phoneNumber": "+4401111222333" } }
+        PUT /bookings/HTX-12345678/vehicles/sa_07
+        { "driver": { "name": "Sam", "phoneNumber": "+4401111444555" } }
+        ...
+        DELETE /bookings/HTX-12345678/vehicles
+        PUT /bookings/HTX-12345678/vehicles/al_01
+        { "driver": { "name": "Alex", "phoneNumber": "+4401111666777" } }
+        PUT /bookings/HTX-12345678/vehicles/na_01
+        { "driver": { "name": "Nathalie", "phoneNumber": "+4401111888999" } }
+        ```
+
+        De-allocating each vehicle in turn has exactly the same result:
+
+        ```
+        PUT /bookings/HTX-12345678/vehicles/jo_03
+        { "driver": { "name": "Joe", "phoneNumber": "+4401111222333" } }
+        PUT /bookings/HTX-12345678/vehicles/sa_07
+        { "driver": { "name": "Sam", "phoneNumber": "+4401111444555" } }
+        ...
+        DELETE /bookings/HTX-12345678/vehicles/sa_07
+        DELETE /bookings/HTX-12345678/vehicles/jo_03
+        PUT /bookings/HTX-12345678/vehicles/al_01
+        { "driver": { "name": "Alex", "phoneNumber": "+4401111666777" } }
+        PUT /bookings/HTX-12345678/vehicles/na_01
+        { "driver": { "name": "Nathalie", "phoneNumber": "+4401111888999" } }
+        ```
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          $ref: "#/components/responses/success-acknowledgement"
+        "202":
+          $ref: "#/components/responses/success-non-committal"
+        "400":
+          $ref: "#/components/responses/error-response"
+        "401":
+          $ref: "#/components/responses/error-response"
+        "404":
+          $ref: "#/components/responses/notfound-response"
+  /products/resorts/areas:
+    parameters:
+      - $ref: "#/components/parameters/api-key-header"
+      - $ref: "#/components/parameters/content-type-header"
+      - $ref: "#/components/parameters/accept-header"
+      - $ref: "#/components/parameters/version-header-any"
+      - schema:
+          type: integer
+          default: 1
+          example: 19928
+          minimum: 1
+        in: query
+        name: startAt
+        description: First ResortId to be returned in batch
+    get:
+      summary: List resorts with related geographical area data
+      description: |-
+        Describes the geographic areas which can be searched in the Holiday Taxis system.
+        For each "resort" in the Holiday Taxis system, lists one or more shapes in WKT format which describe the geographic areas which are included in that resort.
+
+        Results are returned in batches of 500 and ordered by ResortId (unique ID for a HolidayTaxis resort).
+
+        If a `startAt` value is provided, results will be returned starting at this ResortId. Use the next and previous links in the response to navigate through batches.
+      tags:
+        - metadata
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        properties:
+                          next:
+                            type:
+                              - string
+                              - "null"
+                            pattern: '^\/products\/resorts\/areas\?startAt=[1-9]\d*$'
+                            description: URI for next batch of 500 resorts
+                          previous:
+                            type:
+                              - string
+                              - "null"
+                            pattern: '^\/products\/resorts\/areas\?startAt=[1-9]\d*$'
+                            description: URI for previous batch of 500 resorts
+                  resorts:
+                    type: object
+                    minProperties: 0
+                    patternProperties:
+                      "resort_[0-9]+":
+                        type: object
+                        description: List of resorts, formatted as an object with sequential keys (resort_0, resort_1, etc)
+                        properties:
+                          resortid:
+                            type: integer
+                            minimum: 1
+                            description: Unique ID for HolidayTaxis resort
+                          areas:
+                            type: object
+                            description: List of areas which define the resort, formatted as an object with sequential keys (area_0, area_1, etc)
+                            patternProperties:
+                              "area_[0-9]+":
+                                type: string
+                                description: Shape description in WKT (well-known text) format, formatted as an object with sequential keys (area_0, area_1, etc). See https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry. Includes Polygon and MultiPolygon types.'
+                  warnings:
+                    $ref: "#/components/schemas/warnings"
+              examples:
+                JSON response for first page:
+                  value:
+                    {
+                      "metadata":
+                        {
+                          "links":
+                            {
+                              "next": "/products/resorts/areas?startAt=964",
+                              "previous": null,
+                            },
+                        },
+                      "resorts":
+                        {
+                          "resort_0":
+                            {
+                              "resortid": 1,
+                              "areas":
+                                {
+                                  "area_0": "POLYGON ((1.0661400000000003 41.0701, 1.0690400000000002 41.0702, 1.07095 41.0706, 1.07345 41.0716, 1.0770100000000002 41.073, 1.0820100000000001 41.0725, 1.09343 41.0719, 1.10128 41.0719, 1.10112 41.071, 1.09974 41.0648, 1.08601 41.0636, 1.0711824172318287 41.064590028638861, 1.08772 41.0721, 1.0665400000000003 41.0649, 1.0711824172318287 41.064590028638861, 1.0665800000000003 41.0625, 1.0661400000000003 41.0701))",
+                                  "area_1": "POLYGON ((1.10874 41.0713, 1.10842 41.0731, 1.10838 41.0733, 1.10835 41.0734, 1.10803 41.0734, 1.10201 41.0721, 1.10132 41.0719, 1.10101 41.0705, 1.10068 41.069, 1.10874 41.0713))",
+                                  "area_2": "POLYGON ((1.1111 41.0717, 1.11314 41.0721, 1.11484 41.0726, 1.1179 41.0736, 1.11763 41.074, 1.11721 41.0744, 1.1167 41.0748, 1.11528 41.0755, 1.11357 41.0763, 1.11179 41.0751, 1.10836 41.0735, 1.10876 41.0713, 1.1111 41.0717))",
+                                },
+                            },
+                          "resort_1":
+                            {
+                              "resortid": 2,
+                              "areas":
+                                {
+                                  "area_0": "POLYGON ((1.0661400000000003 41.0701, 1.0690400000000002 41.0702, 1.07095 41.0706, 1.07345 41.0716, 1.0770100000000002 41.073, 1.0820100000000001 41.0725, 1.09343 41.0719, 1.10128 41.0719, 1.10112 41.071, 1.09974 41.0648, 1.08601 41.0636, 1.0711824172318287 41.064590028638861, 1.08772 41.0721, 1.0665400000000003 41.0649, 1.0711824172318287 41.064590028638861, 1.0665800000000003 41.0625, 1.0661400000000003 41.0701))",
+                                  "area_1": "POLYGON ((1.10874 41.0713, 1.10842 41.0731, 1.10838 41.0733, 1.10835 41.0734, 1.10803 41.0734, 1.10201 41.0721, 1.10132 41.0719, 1.10101 41.0705, 1.10068 41.069, 1.10874 41.0713))",
+                                  "area_2": "POLYGON ((1.1111 41.0717, 1.11314 41.0721, 1.11484 41.0726, 1.1179 41.0736, 1.11763 41.074, 1.11721 41.0744, 1.1167 41.0748, 1.11528 41.0755, 1.11357 41.0763, 1.11179 41.0751, 1.10836 41.0735, 1.10876 41.0713, 1.1111 41.0717))",
+                                },
+                            },
+                        },
+                      "warnings": ["Example Warning"],
+                    }
+            application/xml:
+              schema:
+                type: object
+                xml:
+                  name: response
+                properties:
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        properties:
+                          next:
+                            type:
+                              - string
+                              - "null"
+                            pattern: '^\/products\/resorts\/areas\?startAt=[1-9]\d*$'
+                            description: URI for next batch of 500 resorts
+                          previous:
+                            type:
+                              - string
+                              - "null"
+                            pattern: '^\/products\/resorts\/areas\?startAt=[1-9]\d*$'
+                            description: URI for previous batch of 500 resorts
+                  resorts:
+                    type: array
+                    xml:
+                      wrapped: true
+                    minItems: 0
+                    items:
+                      type: object
+                      xml:
+                        name: resort
+                      properties:
+                        resortid:
+                          type: integer
+                          minimum: 1
+                          description: Unique ID for HolidayTaxis resort
+                        areas:
+                          type: array
+                          xml:
+                            wrapped: true
+                          description: "Array of strings in WKT (well-known text) format. See https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry. Includes Polygon and MultiPolygon types."
+                          items:
+                            type: string
+                            xml:
+                              name: area
+              examples:
+                XML response for first page:
+                  value: |-
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <response>
+                      <metadata>
+                        <links>
+                          <next>/products/resorts/areas?startAt=964</ref>
+                          <previous/>
+                        </links>
+                      </metadata>
+                      <resorts>
+                        <resort>
+                          <resortid>1</resortid>
+                          <areas>
+                            <area>
+                                POLYGON ((1.0661400000000003 41.0701, 1.0690400000000002 41.0702, 1.07095 41.0706, 1.07345 41.0716, 1.0770100000000002 41.073, 1.0820100000000001 41.0725, 1.09343 41.0719, 1.10128 41.0719, 1.10112 41.071, 1.09974 41.0648, 1.08601 41.0636, 1.0711824172318287 41.064590028638861, 1.08772 41.0721, 1.0665400000000003 41.0649, 1.0711824172318287 41.064590028638861, 1.0665800000000003 41.0625, 1.0661400000000003 41.0701))
+                            </area>
+                             <area>
+                                POLYGON ((1.0661400000000003 41.0701, 1.0690400000000002 41.0702, 1.07095 41.0706, 1.07345 41.0716, 1.0770100000000002 41.073, 1.0820100000000001 41.0725, 1.09343 41.0719, 1.10128 41.0719, 1.10112 41.071, 1.09974 41.0648, 1.08601 41.0636, 1.0711824172318287 41.064590028638861, 1.08772 41.0721, 1.0665400000000003 41.0649, 1.0711824172318287 41.064590028638861, 1.0665800000000003 41.0625, 1.0661400000000003 41.0701))
+                            </area>
+                             <area>
+                                POLYGON ((1.0661400000000003 41.0701, 1.0690400000000002 41.0702, 1.07095 41.0706, 1.07345 41.0716, 1.0770100000000002 41.073, 1.0820100000000001 41.0725, 1.09343 41.0719, 1.10128 41.0719, 1.10112 41.071, 1.09974 41.0648, 1.08601 41.0636, 1.0711824172318287 41.064590028638861, 1.08772 41.0721, 1.0665400000000003 41.0649, 1.0711824172318287 41.064590028638861, 1.0665800000000003 41.0625, 1.0661400000000003 41.0701))
+                            </area>
+                          </areas>
+                      </resorts>
+                    </response>
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: API_KEY
+      description: |
+        Use your API key to access this API. Include it in the `API-KEY` header of your requests.
+  parameters:
+    api-key-header:
+      in: header
+      name: API_KEY
+      description: |
+        The API Key provided to you to by Holiday Taxis, which authenticates you to the system and authorises you to view and manage your bookings. Documentation can be found <a href="/supplier-connect/overview.html#auth"> [ Here ]</a>
+      required: true
+      schema:
+        type: string
+    version-header-any:
+      in: header
+      name: VERSION
+      description: The version of the API you wish to use; as new features are released, you will need to send new values to access them
+      required: false
+      schema:
+        type: string
+        enum: ["2025-01", "2023-09", "2023-06", "2022-06", "2021-09"]
+    version-header-min-2025-01:
+      in: header
+      name: VERSION
+      description: |-
+        The version of the API you wish to use; as new features are released, you will need to send new values to access them.
+        This operation requires at least version '2025-01'.
+      required: true
+      schema:
+        type: string
+        enum: ["2025-01"]
+    content-type-header:
+      in: header
+      name: Content-Type
+      description: Selects the format of the provided request (JSON or XML); should match the Accept header
+      required: true
+      schema:
+        type: string
+        enum:
+          - "application/xml"
+          - "application/json"
+    accept-header:
+      in: header
+      name: Accept
+      description: Selects the preferred format for responses (JSON or XML); for PUT or POST requests, this should match the Content-Type header
+      required: true
+      schema:
+        type: string
+        enum:
+          - "application/xml"
+          - "application/json"
+    bookingRef:
+      in: path
+      name: bookingRef
+      description: The Holiday Taxis Booking Reference.
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-zA-Z0-9]{2,5}-[0-9]{6,}$"
+        example: HTX-12345678
+    bookingRef-syntheticTesting:
+      in: path
+      name: bookingRef
+      description: |+
+        The Holiday Taxis Booking Reference.
+
+        As part of your testing you can use the following reserved booking references to simulate error and success responses:
+
+        TEST-111111 will return an OK response with status code 200
+
+        TEST-222222 will return a NOT FOUND response with status code 404
+
+        TEST-333333 will return a CANCELLED response with status code 400
+
+        TEST-444444 will return a BOOKING_TRAVELLED_TOO_LONG_AGO response with status code 400
+
+        TEST-555555 will return a BOOKING_TRAVELS_TOO_LONG_IN_THE_FUTURE response with status code 400
+
+        TEST-666666 will return an INFORMATION_NOT_EXPECTED_FOR_THIS_BOOKING_TYPE response with status code 400
+
+        TEST-777777 will return a TOO_MANY_DISTINCT_VEHICLE_IDENTIFIERS_FOR_THIS_BOOKING response with status code 400
+
+        TEST-888888 will return an ATTEMPT_TO_DE_ALLOCATE_A_VEHICLE_IDENTIFIER_THAT_DOES_NOT_EXIST response with status code 400
+
+        TEST-999999 will return an BOOKING_DATA_PROVIDED_TOO_EARLY response with status code 202
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-zA-Z0-9]{2,5}-[0-9]{6,}$"
+        example: HTX-12345678
+    vehicleIdentifier:
+      in: path
+      name: vehicleIdentifier
+      description: |-
+        A free-form value to distinguish multiple vehicles fulfilling the same booking.
+        This should be set consistently for a particular vehicle / in all requests for a particular booking.
+      required: true
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9._~-]{1,40}$"
+        example: bc9f89ab-285f-410e-913e-464d4adbaa53
+    dateFrom:
+      in: path
+      name: dateFrom
+      description: Start date of your search
+      required: false
+      schema:
+        type: string
+        example: 2015-05-14T09:30:00
+        pattern: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}
+    dateTo:
+      in: path
+      name: dateTo
+      description: End date of your search
+      required: false
+      schema:
+        type: string
+        example: 2015-05-14T09:30:00
+        pattern: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}
+    pageNumber:
+      in: path
+      name: pageNumber
+      description: Page number, default 1
+      required: false
+      schema:
+        type: int
+        minimum: 1
+        default: 1
+  responses:
+    no-content-search-response:
+      description: |-
+        Response returned when no bookings are available
+      content: {}
+
+    success-acknowledgement:
+      description: |-
+        Acknowledgement of receipt of a valid request.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                const: "OK"
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Successful Response":
+              value:
+                status: OK
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            type: object
+            xml:
+              name: response
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                const: "OK"
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <status>OK</status>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings>
+                </response>
+    successful-search-response:
+      description: |-
+        Response Returning bookings available for specified date and time
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/search-booking-response"
+          examples:
+            "Successful Response":
+              value:
+                bookings:
+                  booking_0:
+                    ref: TEST-4859500
+                    status: PCON
+                    lastactiondate: "2015-04-01T10:42:28"
+                    arrivaldate: "2015-04-14T11:00:00"
+                    departuredate: "2015-04-17T21:45:00"
+                    passengername: MRS R Test
+                    passengertelno: "+31610392434"
+                    vehicle: Speedy Shuttle
+                    link: https://suppliers.holidaytaxis.com/bookings/HTX-4859500
+                    orderref: abc123
+                  booking_1:
+                    ref: TEST-4859501
+                    status: PCON
+                    lastactiondate: "2015-04-01T10:42:28"
+                    arrivaldate: "2015-04-14T11:00:00"
+                    departuredate: "2015-04-17T21:45:00"
+                    passengername: MRS R Test
+                    passengertelno: "+31610392434"
+                    vehicle: Shuttle
+                    link: https://suppliers.holidaytaxis.com/bookings/TEST-4859501
+                    orderref: abc123
+                  more: https://suppliers.holidaytaxis.com/bookings/search/since/2015-04-01T00:00:00/until/2016-11-24T00:00:00/page/2
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/search-booking-response"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <bookings>
+                    <booking>
+                      <ref>TEST-4859500</ref>
+                      <status>PCON</status>
+                      <lastactiondate>2015-04-01T10:42:28</lastactiondate>
+                      <arrivaldate>2015-04-14T11:00:00</arrivaldate>
+                      <departuredate>2015-04-17T21:45:00</departuredate>
+                      <passengername>MRS R BOOKER</passengername>
+                      <vehicle>Speedy Shuttle</vehicle>
+                      <link>https://suppliers.holidaytaxis.com/bookings/HTX-4859500</link>
+                      <orderref>abc123</orderref> Version 2023-06 or later only
+                    </booking>
+                    <booking>
+                      <ref>TEST-4859501</ref>
+                      <status>PCON</status>
+                      <lastactiondate>2015-04-01T10:42:28</lastactiondate>
+                      <arrivaldate>2015-04-14T11:00:00</arrivaldate>
+                      <departuredate>2015-04-17T21:45:00</departuredate>
+                      <passengername>MRS R BOOKER</passengername>
+                      <vehicle>Shuttle</vehicle>
+                      <link>https://suppliers.holidaytaxis.com/bookings/HTX-4859500</link>
+                      <orderref>abc123</orderref> Version 2023-06 or later only
+                    </booking>
+                  </bookings>
+                  <more>https://suppliers.holidaytaxis.com/bookings/search/since/2015-04-01T00:00:00/until/2016-11-24T00:00:00/page/2</more>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings> Version 2021-09 or later only
+                </response>
+    successful-booking-update-multiple-response:
+      description: |-
+        Response for Update details and notes of multiple bookings
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/multiple-booking-update-response"
+          examples:
+            "Single outbound only":
+              value:
+                bookings:
+                  - booking:
+                      general:
+                        ref: TEST-25413085
+                        status: ACON
+                        bookingtype: Single outbound only
+                        passengername: Mr Test Test
+                        passengertelno: "15402933250"
+                        airport: Amsterdam Airport
+                        airportcode: AMS
+                        resort: Amsterdam city centre
+                        vehicle: Private Standard Car 1 - 3
+                        pax: 2
+                        adults: 2
+                        children: 0
+                        infants: 0
+                        language: en
+                        datebooked: "2025-05-01T15:46:40"
+                      arrival:
+                        fromairport:
+                        fromairportcode:
+                        flightno: UA-946
+                        arrivaldate: "2025-07-03T07:35:00"
+                        accommodationname: NH Collection Amsterdam Barbizon Palace
+                        accommodationaddress1: Prins Hendrikkade,59-72   1012 AD
+                        accommodationaddress2: AMSTERDAM
+                        accommodationaddress3: NL
+                        accommodationtel:
+                      notes: https://suppliers.holidaytaxis.com/bookings/notes/3MJ8DQ
+                warnings: ["Example Warning"]
+            "Single inbound only":
+              value:
+                bookings:
+                  - booking:
+                      general:
+                        ref: TEST-24596043
+                        status: ACAN
+                        bookingtype: Single return only
+                        passengername: Mr Test Test
+                        passengertelno: "15052394269"
+                        airport: Amsterdam River Cruise Port
+                        airportcode: arcp
+                        resort: Amsterdam city centre
+                        vehicle: Private Premium Car 1 - 3
+                        pax: 2
+                        adults: 2
+                        children: 0
+                        infants: 0
+                        language: en
+                        datebooked: "2025-02-14T16:35:52"
+                      departure:
+                        toairport:
+                        toairportcode:
+                        flightno:
+                        departuredate: "2025-10-29T14:00:00"
+                        pickupdate: "2025-10-29T11:00:00"
+                        accommodationname: Sofitel Legend the Grand Amsterdam
+                        accommodationaddress1: Oudezijds Voorburgwal,197   1012 EX
+                        accommodationaddress2: AMSTERDAM
+                        accommodationaddress3: NL
+                        accommodationtel:
+                        newpickupaccom:
+                        newpickupaddress1:
+                        newpickupaddress2:
+                        newpickupaddress3:
+                      notes: https://suppliers.holidaytaxis.com/bookings/notes/ABC23E
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/multiple-booking-update-response"
+          examples:
+            "Single outbound only":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <bookings>
+                  <booking>
+                    <general>
+                      <ref>TEST-25413085</ref>
+                      <status>ACON</status>
+                      <bookingtype>Single outbound only</bookingtype>
+                      <passengername>Mr Test Test</passengername>
+                      <passengertelno>15402933250</passengertelno>
+                      <airport>Amsterdam Airport</airport>
+                      <airportcode>AMS</airportcode>
+                      <resort>Amsterdam city centre</resort>
+                      <vehicle>Private Standard Car 1 - 3</vehicle>
+                      <pax>2</pax>
+                      <adults>2</adults>
+                      <children>0</children>
+                      <infants>0</infants>
+                      <language>en</language>
+                      <datebooked>2025-05-01T15:46:40</datebooked>
+                    </general>
+                    <departure>
+                      <toairport>None</toairport>
+                      <toairportcode>None</toairportcode>
+                      <flightno>None</flightno>
+                      <departuredate>2025-10-29T14:00:00</departuredate>
+                      <pickupdate>2025-10-29T11:00:00</pickupdate>
+                      <accommodationname>Sofitel Legend the Grand Amsterdam</accommodationname>
+                      <accommodationaddress1>Oudezijds Voorburgwal,197   1012 EX</accommodationaddress1>
+                      <accommodationaddress2>AMSTERDAM</accommodationaddress2>
+                      <accommodationaddress3>NL</accommodationaddress3>
+                      <accommodationtel>None</accommodationtel>
+                      <newpickupaccom>None</newpickupaccom>
+                      <newpickupaddress1>None</newpickupaddress1>
+                      <newpickupaddress2>None</newpickupaddress2>
+                      <newpickupaddress3>None</newpickupaddress3>
+                    </departure>
+                    <notes>https://suppliers.holidaytaxis.com/bookings/notes/ABC123</notes>
+                  </booking>
+                </bookings>
+            "Single inbound only":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <bookings>
+                  <booking>
+                    <general>
+                      <ref>TEST-24596043</ref>
+                      <status>ACAN</status>
+                      <bookingtype>Single return only</bookingtype>
+                      <passengername>Mr Test Test</passengername>
+                      <passengertelno>15052394269</passengertelno>
+                      <airport>Amsterdam River Cruise Port</airport>
+                      <airportcode>arcp</airportcode>
+                      <resort>Amsterdam city centre</resort>
+                      <vehicle>Private Premium Car 1 - 3</vehicle>
+                      <pax>2</pax>
+                      <adults>2</adults>
+                      <children>0</children>
+                      <infants>0</infants>
+                      <language>en</language>
+                      <datebooked>2025-02-14T16:35:52</datebooked>
+                    </general>
+                    <departure>
+                      <toairport>None</toairport>
+                      <toairportcode>None</toairportcode>
+                      <flightno>None</flightno>
+                      <departuredate>2025-10-29T14:00:00</departuredate>
+                      <pickupdate>2025-10-29T11:00:00</pickupdate>
+                      <accommodationname>Sofitel Legend the Grand Amsterdam</accommodationname>
+                      <accommodationaddress1>Oudezijds Voorburgwal,197   1012 EX</accommodationaddress1>
+                      <accommodationaddress2>AMSTERDAM</accommodationaddress2>
+                      <accommodationaddress3>NL</accommodationaddress3>
+                      <accommodationtel>None</accommodationtel>
+                      <newpickupaccom>None</newpickupaccom>
+                      <newpickupaddress1>None</newpickupaddress1>
+                      <newpickupaddress2>None</newpickupaddress2>
+                      <newpickupaddress3>None</newpickupaddress3>
+                    </departure>
+                    <notes>https://suppliers.holidaytaxis.com/bookings/notes/BVXN16</notes>
+                  </booking>
+                </bookings>
+    successful-booking-reconfirm-response:
+      description: |-
+        Response for Reconfirm multiple bookings
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/reconfirm-multiple-booking-response"
+          examples:
+            "Successful Response":
+              value:
+                bookings:
+                  ref: TESTC-17685273
+                  message: Update Successful
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/reconfirm-multiple-booking-response"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0"?>
+                <response>
+                    <bookings>
+                        <booking>
+                            <ref>TEST-24204884</ref>
+                            <message>Update Successful</message>
+                        </booking>
+                    </bookings>
+                </response>
+    successful-booking-detail-response:
+      description: |-
+        Response Returning for a single booking
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/booking-details-response"
+          examples:
+            "Single outbound only":
+              value:
+                booking:
+                  general:
+                    ref: TEST-4290672
+                    status: ACON
+                    bookingtype: Single outbound only
+                    bookingreference: BCKKAL
+                    passengername: Mr Test Test
+                    passengertelno: "+447123456789"
+                    airport: Alicante Airport
+                    airportcode: ALC
+                    resort: Benidorm
+                    vehicle: Speedy Shuttle
+                    pax: 1
+                    adults: 2
+                    children: 0
+                    infants: 0
+                    language: en
+                    datebooked: "2015-04-01T20:12:55"
+                    novehicles: 1
+                    orderref: abc123
+                  arrival:
+                    fromairport: Alicante Airport
+                    fromairportcode: ALC
+                    flightno: LS271
+                    arrivaldate: "2015-06-20T11:15:00"
+                    accommodationname: Perla
+                    accommodationaddress1: CL LEPANTO 18
+                    accommodationaddress2:
+                    accommodationaddress3: Playa Levante
+                    accommodationtel: 34 96 585 23 05
+                    "optionalextras ":
+                      - "extra ": "Child Seat (9 - 18kg, 20 - 40lb, 9mths - 4yr) "
+                        "quantity ": 2
+                  notes: https://suppliers.holidaytaxis.com/bookings/notes/TEST-4290672
+                  hasopenquery: "Y"
+                warnings: ["Example Warning"]
+            "Single inbound only":
+              value:
+                booking:
+                  general:
+                    ref: TEST-240922596
+                    status: PCON
+                    bookingtype: Single return only
+                    bookingreference: ABCEAD
+                    passengername: Mr TEST TEST
+                    passengertelno: "15082544071"
+                    airport: Amsterdam Airport
+                    airportcode: AMS
+                    resort: Amsterdam city centre
+                    vehicle: Private Premium Minibus 4 - 7
+                    pax: 4
+                    adults: 4
+                    children: 0
+                    infants: 0
+                    language: en
+                    datebooked: "2025-01-07T21:18:33"
+                    orderref: abc123
+                  departure:
+                    toairport:
+                    toairportcode:
+                    flightno: DL257
+                    departuredate: "2025-08-07T02:35:00"
+                    pickupdate: "2025-08-06T23:40:00"
+                    accommodationname: Grand Hotel Amrâth Amsterdam
+                    accommodationaddress1: Prins Hendrikkade,108   1011 AK
+                    accommodationaddress2: AMSTERDAM
+                    accommodationaddress3: NL
+                    accommodationtel:
+                    newpickupaccom:
+                    newpickupaddress1:
+                    newpickupaddress2:
+                    newpickupaddress3:
+                  notes: https://suppliers.holidaytaxis.com/bookings/notes/TEST-240922596
+
+                hasopenquery: "Y"
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/booking-details-response"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <booking>
+                    <general>
+                        <ref>TEST-4290672</ref>
+                        <status>ACON</status>
+                        <bookingtype>Single outbound only</bookingtype>
+                        <bookingreference>EQS2SE</bookingreference> Version 2023-09 or later only
+                        <passengername>Mr Test Test</passengername>
+                        <passengertelno>+447123456789</passengertelno>
+                        <airport>Alicante Airport</airport>
+                        <airportcode>ALC</airportcode>
+                        <resort>Benidorm</resort>
+                        <vehicle>Speedy Shuttle</vehicle>
+                        <pax />
+                        <adults>2</adults>
+                        <children>0</children>
+                        <infants>0</infants>
+                        <language>en</language>
+                        <datebooked>2015-04-01T20:12:55</datebooked>
+                        <novehicles>1</novehicles> Version 2022-06 or later only
+                        <orderref>abc123</orderref> Version 2023-06 or later only
+                    </general>
+                    <arrival>
+                        <fromairport>Alicante Airport</fromairport>
+                        <fromairportcode>ALC</fromairportcode>
+                        <flightno>LS271</flightno>
+                        <arrivaldate>2015-06-20T11:15:00</arrivaldate>
+                        <accommodationname>Perla</accommodationname>
+                        <accommodationaddress1>CL LEPANTO 18</accommodationaddress1>
+                        <accommodationaddress2 />
+                        <accommodationaddress3>Playa Levante</accommodationaddress3>
+                        <accommodationtel>34 96 585 23 05</accommodationtel>
+                        <optionalextras>
+                        <optionalextra>
+                        <extra>Child Seat (9 - 18kg, 20 - 40lb, 9mths - 4yr)</extra>
+                        <quantity>2</quantity>
+                        </optionalextra>
+                        </optionalextras> Version 2021-09 or later only
+                    </arrival>
+                    <notes>https://suppliers.holidaytaxis.com/bookings/notes/TEST-4290672</notes>
+                    <hasopenquery>Y</hasopenquery> Version 2021-09 or later only
+                </booking>
+    successful-booking-note-response:
+      description: |-
+        Response Returning note for a single booking
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/note-details-response"
+          examples:
+            "Successful Response":
+              value:
+                notes:
+                  note_0:
+                    notedate: "2015-04-02T08:31:50"
+                    user: "Supplier: Nevada Agullo"
+                    note: Confirmed Booking
+                    flightnoquery: 0
+                    wrongresort: 0
+                booking: https://suppliers.holidaytaxis.com/bookings/TEST-4290672
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            $ref: "#/components/schemas/note-details-response"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <notes>
+                    <note>
+                      <notedate>2015-04-02T08:31:50</notedate>
+                      <user>Supplier: Nevada Agullo</user>
+                      <note>Confirmed Booking</note>
+                      <flightnoquery>0</flightnoquery>
+                      <wrongresort>0</wrongresort>
+                    </note>
+                  </notes>
+                  <booking>https://suppliers.holidaytaxis.com/bookings/TEST-4290672</booking>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings> Version 2021-09 or later only
+                </response>
+    success-non-committal:
+      description: |-
+        The request has been accepted for processing, but the processing has not been completed. 
+        The request might or might not eventually be acted upon, as it might be disallowed when processing actually takes place.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                const: "OK"
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Successful Response":
+              value:
+                status: OK
+                warnings: ["Example Warning"]
+        application/xml:
+          schema:
+            type: object
+            xml:
+              name: response
+            required:
+              - status
+            properties:
+              status:
+                type: string
+                const: "OK"
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Successful Response":
+              value: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <status>OK</status>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings>
+                </response>
+    error-response:
+      description: Standard format for all errors and unsuccessful responses.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: One or more error messages
+            required:
+              - errors
+            properties:
+              errors:
+                type: object
+                description: Object containing one or more error messages, each with a distinct key indicating its category, or the field to which it applies
+                minProperties: 1
+                additionalProperties:
+                  type: string
+                  description: Details of an error. The key is a code indicating its category, or the field to which it applies; the value is a human-readable error message.
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Incorrect authentication header":
+              value:
+                errors:
+                  unauthorized: You have provided either an invalid API Key or you are out of IP range, please send valid credentials.
+                warnings: []
+        application/xml:
+          schema:
+            type: object
+            xml:
+              name: response
+            description: One or more error messages
+            required:
+              - errors
+            properties:
+              errors:
+                type: object
+                description: Object containing one or more error messages, each with a distinct key indicating its category, or the field to which it applies
+                minProperties: 1
+                additionalProperties:
+                  type: string
+                  description: Details of an error. The key is a code indicating its category, or the field to which it applies; the value is a human-readable error message.
+              warnings:
+                type: array
+                description: May contain messages about requests which, whilst they may not error, may produce unintended results or may be unsupported in the future
+                items:
+                  type: string
+          examples:
+            "Incorrect authentication header":
+              value: |-
+                <?xml version="1.0"?>
+                <response>
+                  <errors>
+                    <unauthorised>You have provided either an invalid API Key or you are out of IP range, please send valid credentials.</unauthorised>
+                  </errors>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings>
+                </response>
+    notfound-response:
+      description: Standard format for all errors and unsuccessful responses.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: One or more error messages
+            required:
+              - errors
+            properties:
+              errors:
+                type: object
+                description: Object containing one or more error messages, each with a distinct key indicating its category, or the field to which it applies
+                minProperties: 1
+                additionalProperties:
+                  type: string
+                  description: Details of an error. The key is a code indicating its category, or the field to which it applies; the value is a human-readable error message.
+              warnings:
+                $ref: "#/components/schemas/warnings"
+          examples:
+            "Incorrect Search Params":
+              value:
+                errors:
+                  bookingref: 0 - Invalid Booking Reference supplied, booking doesn't exist.
+                warnings: []
+        application/xml:
+          schema:
+            type: object
+            xml:
+              name: response
+            description: One or more error messages
+            required:
+              - errors
+            properties:
+              errors:
+                type: object
+                description: Object containing one or more error messages, each with a distinct key indicating its category, or the field to which it applies
+                minProperties: 1
+                additionalProperties:
+                  type: string
+                  description: Details of an error. The key is a code indicating its category, or the field to which it applies; the value is a human-readable error message.
+              warnings:
+                type: array
+                description: May contain messages about requests which, whilst they may not error, may produce unintended results or may be unsupported in the future
+                items:
+                  type: string
+          examples:
+            "Incorrect authentication header":
+              value: |-
+                <?xml version="1.0"?>
+                <response>
+                  <errors>
+                    <bookingref>0 - Invalid Booking Reference supplied, booking doesn't exist.</bookingref>
+                  </errors>
+                  <warnings>
+                    <warning>Example Warning</warning>
+                  </warnings>
+                </response>
+  schemas:
+    contact-method:
+      type: string
+      description: |-
+        Methods of contact which the driver can be contacted on:
+
+        * 'VOICE' - Direct voice calls on the provided number
+        * 'SMS' - SMS text message
+        * 'VIBER' - Text messaging via Rakuten Viber
+        * 'WHATSAPP' - Text messaging via WhatsApp
+      enum:
+        - VOICE
+        - SMS
+        - VIBER
+        - WHATSAPP
+    warnings:
+      type: array
+      xml:
+        wrapped: true
+      description: |-
+        May contain messages about requests which, whilst they may not error, may produce unintended results or may be unsupported in the future 
+        * Available from Version 2021-09 or later only
+      items:
+        type: string
+        xml:
+          name: warning
+    search-booking-response:
+      description: |-
+        This is the Response for Booking searching, the response is for search criteria; 
+        * Last Action Date
+        * Arrival Date
+        * Departure Date
+      type: object
+      xml:
+        name: response
+      properties:
+        bookings:
+          type: object
+          patternProperties:
+            "^booking_[0-9]+$":
+              type: object
+              required:
+                - ref
+                - status
+                - lastactiondate
+                - arrivaldate
+                - departuredate
+                - passengername
+                - passengertelno
+                - vehicle
+                - orderref
+              properties:
+                ref:
+                  type: string
+                  description: This is the booking reference number. In the following format (ABC-1234567)
+                  example: HTX-4859500
+                status:
+                  type: string
+                  description: |
+                    The current status of the booking. This include one of the following Pending Booking Voucher (PCON), 
+                    Booking Voucher Approved (ACON), Pending Amendment (PAMM), Amendment Approved (AAMM), Pending Cancellation (PCAN),
+                    Cancellation Approved (ACAN).
+                  example: PCON
+                  enum:
+                    - PCON
+                    - ACON
+                    - PAMM
+                    - AAMM
+                    - PCAN
+                    - ACAN
+                lastactiondate:
+                  type: string
+                  format: date-time
+                  description: Last action datetime of the booking  (this is in the time zone where the transfer is located.)
+                  example: "2015-04-01T10:42:28"
+                arrivaldate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passengers flight, cruise ship, train or bus will arrive at the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM' (in the local time zone of the transfer)  (this is in the time zone where the transfer is located.)
+                  example: "2015-04-14T11:00:00"
+                departuredate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passengers flight, cruise ship, train or bus will leave the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                  example: "2015-04-17T21:45:00"
+                passengername:
+                  type: string
+                  description: This is the name of the lead passenger travelling on the booking.
+                  example: MRS R BOOKER
+                passengertelno:
+                  type: string
+                  description: Telephone Number of the passenger
+                  example: MRS R BOOKER
+                vehicle:
+                  type: string
+                  description: The vehicle requested by the passenger. E.g. Shuttle, Private Taxi or Minibus.
+                  example: Speedy Shuttle
+                link:
+                  type: string
+                  format: url
+                  description: If only a summary of an item is returned, then this returns the location of the full details. E.g. when requesting a list of bookings travelling between particular dates, we only return a small amount of information about each booking. This link, if followed will return the full booking details.
+                orderref:
+                  type: string
+                  description: The reference used by the affiliate client or travel agency that made the booking. Available from Version 2023-06 or later only
+                  example: abc123
+            more:
+              type: string
+              format: url
+              description: When more than 10 items are matched by a method, we include this field. This contains the location for the next 10 items that are matched. This is designed to allow each response to be small and lightweight. If this field is not included in the response then there are no more matches.
+        warnings:
+          $ref: "#/components/schemas/warnings"
+    multiple-booking-update-response:
+      description: |-
+        This is the Response for Multiple booking
+      type: object
+      xml:
+        name: response
+      properties:
+        bookings:
+          type: array
+          items:
+            type: object
+            properties:
+              booking:
+                type: object
+                properties:
+                  general:
+                    type: object
+                    description: General booking information
+                    properties:
+                      ref:
+                        type: string
+                        description: Booking reference number
+                        example: TEST-25413085
+                      status:
+                        type: string
+                        description: |
+                          The current status of the booking. This include one of the following Pending Booking Voucher (PCON), 
+                          Booking Voucher Approved (ACON), Pending Amendment (PAMM), Amendment Approved (AAMM), Pending Cancellation (PCAN),
+                          Cancellation Approved (ACAN).
+
+                        example: PCON
+                        enum:
+                          - PCON
+                          - ACON
+                          - PAMM
+                          - AAMM
+                          - PCAN
+                          - ACAN
+                      bookingtype:
+                        type: string
+                        description: Type of booking
+                        example: Return transfer
+                        enum:
+                          - Return transfer
+                          - Single outbound only
+                          - Single return only
+                          - Quote
+                      passengername:
+                        type: string
+                        description: This is the name of the lead passenger travelling on the booking.
+                        example: Mr Test Test
+                      passengertelno:
+                        type: string
+                        description: Passenger's telephone number
+                        example: "15402933250"
+                      airport:
+                        type: string
+                        description: This is the gateway associated to the booking, this doesn't have to be an airport, it can be a port, train station, or bus stop in some cases.
+                        example: Amsterdam Airport
+                      airportcode:
+                        type: string
+                        description: Airport code
+                        example: AMS
+                      resort:
+                        type: string
+                        description: This is the destination associated to the booking. Resort typically relates to a town/city, generally the town/city which the passenger's accommodation resides. However in some cases, this may be another gateway such as an airport, port or train station.
+                        example: Amsterdam city centre
+                      vehicle:
+                        type: string
+                        description: The vehicle requested by the passenger. E.g. Shuttle, Private Taxi or Minibus.
+                        example: Private Standard Car 1 - 3
+                      pax:
+                        type: integer
+                        description: The total number of passengers travelling on the booking.
+                        example: 2
+                      adults:
+                        type: integer
+                        description: The number of adults travelling on the booking.
+                        example: 2
+                      children:
+                        type: integer
+                        description: Number of children
+                        example: 0
+                      infants:
+                        type: integer
+                        description: The number of infants travelling on the booking.
+                        example: 0
+                      language:
+                        type: string
+                        description: The language the booking was made in, using a 2 letter language code. E.g. en, fr, es, de, etc.
+                        example: en
+                      datebooked:
+                        type: string
+                        format: date-time
+                        description: The date and time in which the booking was made, in the following format 'YYYY-MM-DDTHH:MM:SS' (in UTC)
+                        example: "2025-05-01T15:46:40"
+                  arrival:
+                    type: object
+                    description: Arrival details
+                    properties:
+                      fromairport:
+                        type: string
+                        description: The originating airport of the passengers flight due to arrive at the airport associated to the booking (described above) on the arrival date.
+                      fromairportcode:
+                        type: string
+                        description: The 3 letter IATA Code for the 'fromairport' (above)
+                        example: null
+                      flightno:
+                        type: string
+                        description: Flight number
+                        example: UA-946
+                      arrivaldate:
+                        type: string
+                        format: date-time
+                        description: The date and time on which the passengers flight, cruise ship, train or bus will arrive at the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM' (in the local time zone of the transfer)
+                        example: "2025-07-03T07:35:00"
+                      accommodationname:
+                        type: string
+                        description: Name of the accommodation
+                        example: NH Collection Amsterdam Barbizon Palace
+                      accommodationaddress1:
+                        type: string
+                        description: The first line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                        example: Prins Hendrikkade,59-72   1012 AD
+                      accommodationaddress2:
+                        type: string
+                        description: The second line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                        example: AMSTERDAM
+                      accommodationaddress3:
+                        type: string
+                        description: The third line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                        example: NL
+                      accommodationtel:
+                        type: string
+                        description: The telephone number of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                        example: null
+                  departure:
+                    type: object
+                    description: Departure details
+                    properties:
+                      toairport:
+                        type: string
+                        description: The destination airport of the passengers flight due to depart the airport associated to the booking (described above) on the departure date.
+                        example: ""
+                      toairportcode:
+                        type: string
+                        description: Destination airport code
+                        example: ""
+                      flightno:
+                        type: string
+                        description: The flight number of the either the passengers arrival or departing flight. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                        example: DL257
+                      departuredate:
+                        type: string
+                        format: date-time
+                        description: The date and time on which the passengers flight, cruise ship, train or bus will leave the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                        example: "2025-08-07T02:35:00"
+                      pickupdate:
+                        type: string
+                        format: date-time
+                        description: The date and time on which the passenger will be picked up from the 'resort' associated to the booking in order for them to arrive at the 'airport' on time, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                        example: "2025-08-06T23:40:00"
+                      accommodationname:
+                        type: string
+                        description: Name of the accommodation
+                        example: Grand Hotel Amrâth Amsterdam
+                      accommodationaddress1:
+                        type: string
+                        description: The first line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  notes:
+                    type: string
+                    description: URL for booking notes
+                    example: https://suppliers.holidaytaxis.com/bookings/notes/3MJ8DQ
+    reconfirm-multiple-booking-response:
+      description: |-
+        This is the Response for Multiple booking Reconfirmation
+      type: object
+      xml:
+        name: response
+      properties:
+        bookings:
+          type: array
+          description: List of booking details
+          items:
+            type: object
+            properties:
+              ref:
+                type: string
+                description: Reference number of the booking
+                example: TESTC-17685273
+              message:
+                type: string
+                description: Message related to the booking status
+                example: Update Successful
+    booking-details-response:
+      description: |-
+        This is the Response for booking details
+      type: object
+      xml:
+        name: response
+      properties:
+        booking:
+          type: object
+          required:
+            - general
+            - notes
+            - hasopenquery
+          properties:
+            general:
+              type: object
+              required:
+                - ref
+                - status
+                - bookingreference
+                - passengername
+                - passengertelno
+                - airport
+                - airportcode
+                - resort
+                - vehicle
+                - adults
+                - language
+                - datebooked
+                - novehicles
+              properties:
+                ref:
+                  type: string
+                  description: This is the booking reference number. In the following format (ABC-1234567)
+                  example: TEST-4290672
+                status:
+                  type: string
+                  description: |
+                    The current status of the booking. This include one of the following Pending Booking Voucher (PCON), 
+                    Booking Voucher Approved (ACON), Pending Amendment (PAMM), Amendment Approved (AAMM), Pending Cancellation (PCAN),
+                    Cancellation Approved (ACAN).
+                  example: PCON
+                  enum:
+                    - PCON
+                    - ACON
+                    - PAMM
+                    - AAMM
+                    - PCAN
+                    - ACAN
+                bookingtype:
+                  type: string
+                  description: This defines the type of booking.
+                  example: Return transfer
+                  enum:
+                    - Return transfer
+                    - Single outbound only
+                    - Single return only
+                    - Quote
+                bookingreference:
+                  type: string
+                  description: This parameter represents the booking reference that the customer sees for their booking. It's a randomly generated string, unique to each booking, but shared across all legs of that booking. Available from Version 2023-09 or later only
+                  example: BCKKAL
+                passengername:
+                  type: string
+                  description: This is the name of the lead passenger travelling on the booking.
+                  example: Mr Test Test
+                passengertelno:
+                  type: string
+                  description: Telephone number of the passenger
+                  example: "+447123456789"
+                  pattern: ^\+\d{11}$
+                airport:
+                  type: string
+                  description: This is the gateway associated to the booking, this doesn't have to be an airport, it can be a port, train station, or bus stop in some cases.
+                  example: Alicante Airport
+                airportcode:
+                  type: string
+                  description: Code of the airport
+                  example: ALC
+                resort:
+                  type: string
+                  description: This is the destination associated to the booking. Resort typically relates to a town/city, generally the town/city which the passenger's accommodation resides. However in some cases, this may be another gateway such as an airport, port or train station.
+                  example: Benidorm
+                vehicle:
+                  type: string
+                  description: The vehicle requested by the passenger. E.g. Shuttle, Private Taxi or Minibus.
+                  example: Speedy Shuttle
+                pax:
+                  type: string
+                  description: The total number of passengers travelling on the booking.
+                  example: null
+                adults:
+                  type: integer
+                  description: The number of adults travelling on the booking.
+                  example: 2
+                children:
+                  type: integer
+                  description: The number of children travelling on the booking.
+                  example: 0
+                infants:
+                  type: integer
+                  description: The number of infants travelling on the booking.
+                  example: 0
+                language:
+                  type: string
+                  description: The language the booking was made in, using a 2 letter language code. E.g. en, fr, es, de, etc.
+                  example: en
+                datebooked:
+                  type: string
+                  format: date-time
+                  description: The date and time in which the booking was made, in the following format 'YYYY-MM-DDTHH:MM:SS' (in UTC)
+                  example: "2015-04-01T20:12:55"
+                novehicles:
+                  type: integer
+                  description: The number of vehicles required for the booking. Note that this will not be included for per-person (shuttle) bookings. This feature is available from Version 2022-06 or later only
+                  example: 1
+                orderref:
+                  type: string
+                  description: The reference used by the affiliate client or travel agency that made the booking. Available from Version 2023-06 or later only
+                  example: abc123
+            arrival:
+              type: object
+              description: Arrival details
+              required:
+                - fromairport
+                - fromairportcode
+                - flightno
+                - arrivaldate
+                - accommodationname
+                - accommodationaddress1
+                - accommodationaddress
+                - accommodationtel
+              properties:
+                fromairport:
+                  type: string
+                  description: The originating airport of the passengers flight due to arrive at the airport associated to the booking (described above) on the arrival date.
+                  example: Alicante Airport
+                fromairportcode:
+                  type: string
+                  description: The 3 letter IATA Code for the 'fromairport' (above)
+                  example: ALC
+                flightno:
+                  type: string
+                  description: The flight number of the either the passengers arrival or departing flight. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: LS271
+                arrivaldate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passengers flight, cruise ship, train or bus will arrive at the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM' (in the local time zone of the transfer)
+                  example: "2015-06-20T11:15:00"
+                accommodationname:
+                  type: string
+                  description: Name of the accommodation
+                  example: Perla
+                accommodationaddress1:
+                  type: string
+                  description: The first line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: CL LEPANTO 18
+                accommodationaddress2:
+                  type: string
+                  description: The second line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: null
+                accommodationaddress3:
+                  type: string
+                  description: The third line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: Playa Levante
+                accommodationtel:
+                  type: string
+                  description: The telephone number of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: 34 96 585 23 05
+                optionalextras:
+                  type: array
+                  description: Optional extras Available from Version 2021-09 or later only
+                  items:
+                    type: object
+                    properties:
+                      extra:
+                        type: string
+                        description: Description of the extra
+                        example: Child Seat (9 - 18kg, 20 - 40lb, 9mths - 4yr)
+                      quantity:
+                        type: integer
+                        description: Quantity of the extra
+                        example: 2
+            departure:
+              type: object
+              description: Departure details
+              properties:
+                toairport:
+                  type: string
+                  description: The destination airport of the passengers flight due to depart the airport associated to the booking (described above) on the departure date.
+                  example: ""
+                toairportcode:
+                  type: string
+                  description: The 3 letter IATA Code for the 'toairport' (above)
+                  example: ""
+                flightno:
+                  type: string
+                  description: The flight number of the either the passengers arrival or departing flight. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: DL257
+                departuredate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passengers flight, cruise ship, train or bus will leave the 'airport' associated to the booking, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                  example: "2025-08-07T02:35:00"
+                pickupdate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passenger will be picked up from the 'resort' associated to the booking in order for them to arrive at the 'airport' on time, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer
+                  example: "2025-08-06T23:40:00"
+                accommodationname:
+                  type: string
+                  description: The name of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                  example: Grand Hotel Amrâth Amsterdam
+                accommodationaddress1:
+                  type: string
+                  description: The first line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                accommodationaddress2:
+                  type: string
+                  description: The second line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+                accommodationaddress3:
+                  type: string
+                  description: The third line of the address of the accommodation or building at which the passengers will be picked up and dropped off. (Depending on whether it is included in the 'arrival' or 'departure' section.)
+            notes:
+              type: string
+              format: url
+              description: Link to the booking notes
+              example: https://suppliers.holidaytaxis.com/bookings/notes/TEST-4290672
+            hasopenquery:
+              type: string
+              description: Indicates a booking as a query that is unresolved. "Y" if, one is present, otherwise empty. Available from Version 2021-09 or later only
+              example: Y
+        warnings:
+          $ref: "#/components/schemas/warnings"
+    note-details-response:
+      description: |-
+        This is the Response for booking details with Note information
+      type: object
+      xml:
+        name: response
+      properties:
+        notes:
+          type: object
+          patternProperties:
+            "^note_[0-9]+$":
+              type: object
+              properties:
+                notedate:
+                  type: string
+                  format: date-time
+                  description: Date of the note in UTC
+                  example: "2015-04-02T08:31:50"
+                user:
+                  type: string
+                  description: User who made the note
+                  example: "Supplier: Nevada Agullo"
+                note:
+                  type: string
+                  description: Content of the note
+                  example: Confirmed Booking
+                flightnoquery:
+                  type: integer
+                  description: Indicates that the 'flightno' on the booking is incorrect, incomplete or missing. Accepted values are 1 or 0. If set to 1, 'notecontent' can be left empty.
+                  example: 0
+                wrongresort:
+                  type: integer
+                  description: Indicates that the 'resort' associated to the booking is incorrect. Accepted values are 1 or 0. If set to 1, 'notecontent' must contain an explanation of what is wrong, and which resort should be associated to the booking , the note content must be passed for this flag
+                  example: 0
+        booking:
+          type: string
+          format: url
+          description: Link to the booking details
+          example: https://suppliers.holidaytaxis.com/bookings/TEST-4290672
+        warnings:
+          $ref: "#/components/schemas/warnings"
+    booking-request-update-individual:
+      description: |-
+        This is the Request for single booking update
+      type: object
+      required:
+        - request
+      properties:
+        request:
+          type: object
+          required:
+            - status
+            - newpickupaccom
+            - newpickupaddress1
+            - newpickupaddress2
+            - departure
+            - notes
+          properties:
+            status:
+              type: string
+              description: Status of the request
+              example: AAMM
+            newpickupaccom:
+              type: string
+              description: The new name of accommodation or building at which the passengers will be picked up.
+              example: Hotel Hilton
+            newpickupaddress1:
+              type: string
+              description: The new first line of the address of the accommodation or building at which the passengers will be picked up.
+              example: Sandreen street
+            newpickupaddress2:
+              type: string
+              description: The new second line of the address of the accommodation or building at which the passengers will be picked up.
+              example: TEST
+            newpickupaddress3:
+              type: string
+              description: The new second line of the address of the accommodation or building at which the passengers will be picked up.
+              example: TEST
+            departure:
+              type: object
+              required:
+                - pickupdate
+              properties:
+                pickupdate:
+                  type: string
+                  format: date-time
+                  description: The date and time on which the passenger will be picked up from the 'resort' associated to the booking in order for them to arrive at the 'airport' on time, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                  example: "2015-05-14T20:00:00"
+            notes:
+              type: array
+              items:
+                type: object
+                required:
+                  - notecontent
+                properties:
+                  notecontent:
+                    type: string
+                    description: Content of the note
+                    example: ""
+                  flightnoquery:
+                    type: string
+                    description: Indicates that the 'flightno' on the booking is incorrect, incomplete or missing. Accepted values are 1 or 0. If set to 1, 'notecontent' can be left empty.
+                    enum:
+                      - 0
+                      - 1
+                    example: "1"
+                  wrongresort:
+                    type: string
+                    description: Indicates that the 'resort' associated to the booking is incorrect. Accepted values are 1 or 0. If set to 1, 'notecontent' must contain an explanation of what is wrong, and which resort should be associated to the booking, the note content must be passed for this flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+                  mandatorychildseat:
+                    type: string
+                    description: Mandatory child seat flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+                  missingaccommodation:
+                    type: string
+                    description: Missing accommodation flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "1"
+                  missingcruiseshipname:
+                    type: string
+                    description: Missing cruise ship name flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+                  shuttletoprivateaddress:
+                    type: string
+                    description: Shuttle to private address flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+                  noshowarrival:
+                    type: string
+                    description: No show arrival flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+                  noshowdeparture:
+                    type: string
+                    description: No show departure flag
+                    enum:
+                      - 0
+                      - 1
+                    example: "0"
+    booking-request-update-multiple:
+      description: |-
+        This is the Request for multiple booking update
+      type: object
+      required:
+        - bookings
+      properties:
+        bookings:
+          type: array
+          items:
+            type: object
+            properties:
+              ref:
+                type: string
+                description: Reference number of the booking
+                example: TEST-12341234
+              status:
+                type: string
+                description: Status of the booking
+                example: PCON
+                enum:
+                  - PCON
+                  - ACON
+                  - PAMM
+                  - AAMM
+                  - PCAN
+                  - ACAN
+              newpickupaccom:
+                type: string
+                description: The new name of accommodation or building at which the passengers will be picked up.
+                example: United Kingdom
+              newpickupaddress1:
+                type: string
+                description: The new first line of the address of the accommodation or building at which the passengers will be picked up.
+                example: Suite B 2nd Floor TEST
+              newpickupaddress2:
+                type: string
+                description: The new second line of the address of the accommodation or building at which the passengers will be picked up.
+                example: 13 TEST Street
+              newpickupaddress3:
+                type: string
+                description: The new third line of the address of the accommodation or building at which the passengers will be picked up.
+                example: TEST
+              departure:
+                type: object
+                properties:
+                  pickupdate:
+                    type: string
+                    format: date-time
+                    description: The date and time on which the passenger will be picked up from the 'resort' associated to the booking in order for them to arrive at the 'airport' on time, in the following format 'YYYY-MM-DDTHH:MM:SS' (in the local time zone of the transfer)
+                    example: "2023-06-08T11:45:00"
+              notes:
+                type: object
+                properties:
+                  note:
+                    type: object
+                    description: The Note Object must contain notecontent when wrongresort is flag is set to 1 or wrongresort and flightnoquery Flag are set to 1
+                    properties:
+                      notecontent:
+                        type: string
+                        description: Content of the note
+                        example: Confirm booking. Update pickup time, address
+                          and raise wrong resort and flight no query
+                      flightnoquery:
+                        type: string
+                        description: Indicates that the 'flightno' on the booking is incorrect, incomplete or missing. Accepted values are 1 or 0. If set to 1, 'notecontent' can be left empty.
+                        enum:
+                          - 0
+                          - 1
+                        example: "1"
+                      wrongresort:
+                        type: string
+                        description: Indicates that the 'resort' associated to the booking is incorrect. Accepted values are 1 or 0. If set to 1, 'notecontent' must contain an explanation of what is wrong, and which resort should be associated to the booking, the note content must be passed for this flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "0"
+                      mandatorychildseat:
+                        type: string
+                        description: Mandatory child seat flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "0"
+                      missingaccommodation:
+                        type: string
+                        description: Missing accommodation flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "1"
+                      missingcruiseshipname:
+                        type: string
+                        description: Missing cruise ship name flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "0"
+                      shuttletoprivateaddress:
+                        type: string
+                        description: Shuttle to private address flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "0"
+                      noshowarrival:
+                        type: string
+                        description: No show arrival flag
+                        enum:
+                          - 0
+                          - 1
+                        example: "0"
+                      noshowdeparture:
+                        type: string
+                        description: No show departure flag
+                        enum:
+                          - 0
+                          - 1
+                        example: 0
+    booking-request-reconfirm:
+      description: |-
+        This is the Request for booking reconfirmation
+      type: object
+      required:
+        - bookings
+      properties:
+        bookings:
+          type: array
+          items:
+            type: object
+            properties:
+              ref:
+                type: string
+                description: Reference number of the booking
+                example: HTX-1444774
+              newpickuphour:
+                type: string
+                description: New pickup hour
+                example: "10"
+              newpickupmin:
+                type: string
+                description: New pickup minute
+                example: "10"
+              newpickupaccom:
+                type: string
+                description: The new name of accommodation or building at which the passengers will be picked up.
+                example: Suite B 2nd Floor TEST
+              newpickupaddress1:
+                type: string
+                description: The new first line of the address of the accommodation or building at which the passengers will be picked up.
+                example: 13 TEST Street
+              newpickupaddress2:
+                type: string
+                description: The new second line of the address of the accommodation or building at which the passengers will be picked up.
+                example: TEST
+              newpickupaddress3:
+                type: string
+                description: The new second line of the address of the accommodation or building at which the passengers will be picked up.
+                example: TEST
