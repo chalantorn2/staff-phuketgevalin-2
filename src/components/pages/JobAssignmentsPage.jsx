@@ -5,6 +5,7 @@ import React, {
   useContext,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import { getCompanyClass } from "../../config/company";
 import { statusUtils } from "../../services/backendApi";
@@ -24,8 +25,14 @@ function JobAssignmentsPage() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [provinces, setProvinces] = useState([]);
 
+  // Resort list state
+  const [resorts, setResorts] = useState([]);
+  const [resortSearchTerm, setResortSearchTerm] = useState("");
+  const [showResortDropdown, setShowResortDropdown] = useState(false);
+
   // Ref for click outside detection
   const driverDropdownRef = useRef(null);
+  const resortDropdownRef = useRef(null);
 
   // Filter states - Load from localStorage if available
   const getInitialFilters = () => {
@@ -43,6 +50,7 @@ function JobAssignmentsPage() {
     const today = thailandTime.toISOString().split("T")[0];
     return {
       province: "all",
+      resort: "all",
       dateFrom: today,
       dateTo: "",
       search: "",
@@ -91,18 +99,52 @@ function JobAssignmentsPage() {
       (d.phone_number || "").includes(driverSearchTerm)
   );
 
-  // Fetch provinces and drivers on mount
+  // Filter resorts based on search term
+  const filteredResorts = useMemo(() => {
+    if (!resortSearchTerm.trim()) {
+      return resorts;
+    }
+    const searchLower = resortSearchTerm.toLowerCase();
+    return resorts.filter((resort) =>
+      resort.name.toLowerCase().includes(searchLower)
+    );
+  }, [resorts, resortSearchTerm]);
+
+  // Handle resort search input
+  const handleResortSearchChange = (value) => {
+    setResortSearchTerm(value);
+    setShowResortDropdown(true);
+  };
+
+  // Handle resort selection
+  const handleResortSelect = (resort) => {
+    handleFilterChange("resort", resort);
+    setResortSearchTerm(resort);
+    setShowResortDropdown(false);
+  };
+
+  // Handle resort input focus
+  const handleResortFocus = () => {
+    setShowResortDropdown(true);
+  };
+
+  // Fetch provinces, resorts, and drivers on mount
   useEffect(() => {
     fetchProvinces();
     fetchDrivers();
   }, []);
+
+  // Fetch resorts when other filters change
+  useEffect(() => {
+    fetchResorts();
+  }, [filters.province, filters.dateFrom, filters.dateTo, filters.search]);
 
   // Fetch assignments when filters change
   useEffect(() => {
     fetchAssignments();
   }, [filters]);
 
-  // Handle click outside to close dropdown
+  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -111,15 +153,21 @@ function JobAssignmentsPage() {
       ) {
         setShowDriverDropdown(false);
       }
+      if (
+        resortDropdownRef.current &&
+        !resortDropdownRef.current.contains(event.target)
+      ) {
+        setShowResortDropdown(false);
+      }
     };
 
-    if (showDriverDropdown) {
+    if (showDriverDropdown || showResortDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [showDriverDropdown]);
+  }, [showDriverDropdown, showResortDropdown]);
 
   const fetchProvinces = async () => {
     try {
@@ -145,6 +193,36 @@ function JobAssignmentsPage() {
     }
   };
 
+  const fetchResorts = async () => {
+    try {
+      // Build query params (same as assignments API but for resorts)
+      const params = new URLSearchParams();
+
+      // IMPORTANT: Use 'assignments' source to only get resorts from assigned bookings
+      params.append("source", "assignments");
+
+      // Province
+      if (filters.province && filters.province !== "all") {
+        params.append("province", filters.province);
+      }
+
+      // Date filters
+      if (filters.dateFrom) params.append("date_from", filters.dateFrom);
+      if (filters.dateTo) params.append("date_to", filters.dateTo);
+
+      // Search
+      if (filters.search) params.append("search", filters.search);
+
+      const response = await fetch(`/api/bookings/resorts.php?${params}`);
+      const data = await response.json();
+      if (data.success) {
+        setResorts(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching resorts:", error);
+    }
+  };
+
   const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
@@ -153,6 +231,7 @@ function JobAssignmentsPage() {
       const params = new URLSearchParams({
         limit: 500,
         province: filters.province,
+        resort: filters.resort || "all",
       });
 
       if (filters.search.trim()) {
@@ -194,11 +273,13 @@ function JobAssignmentsPage() {
     const today = thailandTime.toISOString().split("T")[0];
     const defaultFilters = {
       province: "all",
+      resort: "all",
       dateFrom: today,
       dateTo: "",
       search: "",
     };
     setFilters(defaultFilters);
+    setResortSearchTerm("");
     localStorage.removeItem("jobAssignmentsFilters");
   };
 
@@ -998,22 +1079,6 @@ function JobAssignmentsPage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={handleExportExcel}
-            disabled={assignments.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i className="fas fa-file-excel"></i>
-            Export Excel
-          </button>
-          <button
-            onClick={handlePrint}
-            disabled={assignments.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i className="fas fa-print"></i>
-            Print
-          </button>
-          <button
             onClick={handleOpenSendModal}
             disabled={assignments.length === 0}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1054,18 +1119,18 @@ function JobAssignmentsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 print:hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search (Driver, Ref, Passenger, Vehicle...)
+              Search (Driver, Ref, Passenger...)
             </label>
             <input
               type="text"
               placeholder="Search driver name, booking ref..."
               value={filters.search}
               onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
           </div>
 
@@ -1077,7 +1142,7 @@ function JobAssignmentsPage() {
             <select
               value={filters.province}
               onChange={(e) => handleFilterChange("province", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             >
               <option value="all">All Provinces</option>
               <option value="unknown">Unknown</option>
@@ -1089,6 +1154,68 @@ function JobAssignmentsPage() {
             </select>
           </div>
 
+          {/* Resort Filter */}
+          <div ref={resortDropdownRef} className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Resort
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={resortSearchTerm}
+                onChange={(e) => handleResortSearchChange(e.target.value)}
+                onFocus={handleResortFocus}
+                placeholder="Search resort..."
+                className="w-full h-[42px] px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              />
+              <i className="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            {showResortDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div
+                  onClick={() => {
+                    handleResortSelect("all");
+                    setResortSearchTerm("");
+                  }}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium text-gray-700 border-b border-gray-200"
+                >
+                  <i className="fas fa-times-circle mr-2 text-gray-400"></i>
+                  Clear / All Resorts
+                </div>
+                {filteredResorts.length > 0 ? (
+                  <>
+                    {filteredResorts.slice(0, 50).map((resort) => (
+                      <div
+                        key={resort.name}
+                        onClick={() => handleResortSelect(resort.name)}
+                        className={`px-3 py-2 hover:bg-cyan-50 cursor-pointer text-sm flex justify-between items-center ${
+                          filters.resort === resort.name
+                            ? "bg-cyan-50 text-cyan-700 font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <span>{resort.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          {resort.count}
+                        </span>
+                      </div>
+                    ))}
+                    {filteredResorts.length > 50 && (
+                      <div className="px-3 py-2 text-xs text-gray-500 italic bg-gray-50">
+                        + {filteredResorts.length - 50} more... (keep typing to
+                        narrow down)
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-sm text-gray-500 italic">
+                    No resorts found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Date From */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1098,20 +1225,20 @@ function JobAssignmentsPage() {
               type="date"
               value={filters.dateFrom}
               onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
           </div>
 
           {/* Date To */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date To (Optional)
+              Date To
             </label>
             <input
               type="date"
               value={filters.dateTo}
               onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
           </div>
         </div>

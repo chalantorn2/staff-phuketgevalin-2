@@ -22,18 +22,13 @@ function BookingManagementPage() {
 
   // Filter states - Load from localStorage if available
   const getInitialFilters = () => {
-    try {
-      const savedFilters = localStorage.getItem("bookingManagementFilters");
-      if (savedFilters) {
-        return JSON.parse(savedFilters);
-      }
-    } catch (error) {
-      console.error("Error loading saved filters:", error);
-    }
     // Default filters
-    return {
-      status: "ACON", // Default to ACON (Confirmed)
+    const defaultFilters = {
+      bookingStatus: ["ACON", "AAMM"], // Default: Confirmed and Amended
+      assignmentStatus: [], // Assigned, Not Assigned
+      bookingType: [], // Arrival, Departure, P2P
       province: "all",
+      resort: "all",
       dateFrom: "",
       dateTo: "",
       search: "",
@@ -41,12 +36,47 @@ function BookingManagementPage() {
       sortBy: "pickup", // 'pickup'
       sortOrder: "asc", // 'asc' or 'desc'
     };
+
+    try {
+      const savedFilters = localStorage.getItem("bookingManagementFilters");
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+
+        // Check if saved filters are missing the new 'resort' field
+        if (!parsed.hasOwnProperty("resort")) {
+          console.log("Old filter format detected, adding resort field");
+          parsed.resort = "all";
+        }
+
+        // Merge with default filters to ensure all fields exist
+        const merged = { ...defaultFilters, ...parsed };
+        console.log("Loaded filters from localStorage:", merged);
+        return merged;
+      }
+    } catch (error) {
+      console.error("Error loading saved filters:", error);
+    }
+
+    console.log("Using default filters:", defaultFilters);
+    return defaultFilters;
   };
 
   const [filters, setFilters] = useState(getInitialFilters());
 
   // Province list state
   const [provinces, setProvinces] = useState([]);
+
+  // Resort list state
+  const [resorts, setResorts] = useState([]);
+  const [resortSearchTerm, setResortSearchTerm] = useState("");
+  const [showResortDropdown, setShowResortDropdown] = useState(false);
+
+  // Status dropdowns state
+  const [showBookingStatusDropdown, setShowBookingStatusDropdown] =
+    useState(false);
+  const [showAssignmentStatusDropdown, setShowAssignmentStatusDropdown] =
+    useState(false);
+  const [showBookingTypeDropdown, setShowBookingTypeDropdown] = useState(false);
 
   // Auto Province state
   const [autoProvinceLoading, setAutoProvinceLoading] = useState(false);
@@ -70,11 +100,38 @@ function BookingManagementPage() {
       const params = new URLSearchParams({
         page: searchFilters.page,
         limit: 20,
-        status: searchFilters.status,
         province: searchFilters.province,
+        resort: searchFilters.resort || "all",
         sort_by: searchFilters.sortBy,
         sort_order: searchFilters.sortOrder,
       });
+
+      // Add booking status filter (multiple values)
+      if (
+        searchFilters.bookingStatus &&
+        searchFilters.bookingStatus.length > 0
+      ) {
+        searchFilters.bookingStatus.forEach((status) => {
+          params.append("booking_status[]", status);
+        });
+      }
+
+      // Add assignment status filter (multiple values)
+      if (
+        searchFilters.assignmentStatus &&
+        searchFilters.assignmentStatus.length > 0
+      ) {
+        searchFilters.assignmentStatus.forEach((status) => {
+          params.append("assignment_status[]", status);
+        });
+      }
+
+      // Add booking type filter (multiple values)
+      if (searchFilters.bookingType && searchFilters.bookingType.length > 0) {
+        searchFilters.bookingType.forEach((type) => {
+          params.append("booking_type[]", type);
+        });
+      }
 
       if (searchFilters.dateFrom)
         params.append("date_from", searchFilters.dateFrom);
@@ -82,13 +139,18 @@ function BookingManagementPage() {
       if (searchFilters.search.trim())
         params.append("search", searchFilters.search.trim());
 
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL ||
-          "https://staff.phuketgevalin.com/api"
-        }/bookings/database-search.php?${params}`
-      );
+      const apiUrl = `${
+        import.meta.env.VITE_API_BASE_URL ||
+        "https://staff.phuketgevalin.com/api"
+      }/bookings/database-search.php?${params}`;
+
+      console.log("Fetching bookings with filters:", searchFilters);
+      console.log("API URL:", apiUrl);
+
+      const response = await fetch(apiUrl);
       const data = await response.json();
+
+      console.log("API Response:", data);
 
       if (data.success) {
         setBookings(data.data.bookings);
@@ -130,11 +192,25 @@ function BookingManagementPage() {
     setFilters(newFilters);
   };
 
+  // Handle checkbox toggle for multi-select filters
+  const handleCheckboxToggle = (filterType, value) => {
+    setFilters((prev) => {
+      const currentValues = prev[filterType];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value];
+      return { ...prev, [filterType]: newValues, page: 1 };
+    });
+  };
+
   // Handle clear filters
   const handleClearFilters = () => {
     const defaultFilters = {
-      status: "ACON",
+      bookingStatus: ["ACON", "AAMM"],
+      assignmentStatus: [],
+      bookingType: [],
       province: "all",
+      resort: "all",
       dateFrom: "",
       dateTo: "",
       search: "",
@@ -143,6 +219,7 @@ function BookingManagementPage() {
       sortOrder: "asc",
     };
     setFilters(defaultFilters);
+    setResortSearchTerm("");
     localStorage.removeItem("bookingManagementFilters");
   };
 
@@ -570,6 +647,108 @@ function BookingManagementPage() {
     fetchProvinces();
   }, []);
 
+  // Fetch resorts list with filter parameters
+  useEffect(() => {
+    const fetchResorts = async () => {
+      try {
+        // Build query params (same as fetchBookings but exclude resort filter)
+        const params = new URLSearchParams();
+
+        // Booking Status
+        if (filters.bookingStatus && filters.bookingStatus.length > 0) {
+          filters.bookingStatus.forEach((status) =>
+            params.append("booking_status[]", status)
+          );
+        }
+
+        // Assignment Status
+        if (filters.assignmentStatus && filters.assignmentStatus.length > 0) {
+          filters.assignmentStatus.forEach((status) =>
+            params.append("assignment_status[]", status)
+          );
+        }
+
+        // Booking Type
+        if (filters.bookingType && filters.bookingType.length > 0) {
+          filters.bookingType.forEach((type) =>
+            params.append("booking_type[]", type)
+          );
+        }
+
+        // Date filters
+        if (filters.dateFrom) params.append("date_from", filters.dateFrom);
+        if (filters.dateTo) params.append("date_to", filters.dateTo);
+
+        // Search
+        if (filters.search) params.append("search", filters.search);
+
+        // Province
+        if (filters.province && filters.province !== "all") {
+          params.append("province", filters.province);
+        }
+
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL ||
+            "https://staff.phuketgevalin.com/api"
+          }/bookings/resorts.php?${params}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setResorts(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching resorts:", error);
+      }
+    };
+
+    fetchResorts();
+  }, [filters.bookingStatus, filters.assignmentStatus, filters.bookingType, filters.dateFrom, filters.dateTo, filters.search, filters.province]);
+
+  // Filter resorts based on search term
+  const filteredResorts = useMemo(() => {
+    if (!resortSearchTerm.trim()) {
+      return resorts;
+    }
+    const searchLower = resortSearchTerm.toLowerCase();
+    return resorts.filter((resort) =>
+      resort.name.toLowerCase().includes(searchLower)
+    );
+  }, [resorts, resortSearchTerm]);
+
+  // Handle resort search input
+  const handleResortSearchChange = (value) => {
+    setResortSearchTerm(value);
+    setShowResortDropdown(true); // Always show dropdown when typing
+  };
+
+  // Handle resort selection
+  const handleResortSelect = (resort) => {
+    handleFilterChange("resort", resort);
+    setResortSearchTerm(resort);
+    setShowResortDropdown(false);
+  };
+
+  // Handle resort input focus
+  const handleResortFocus = () => {
+    setShowResortDropdown(true); // Show all resorts when focused
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const resortFilter = document.getElementById("resort-filter-container");
+      if (resortFilter && !resortFilter.contains(event.target)) {
+        setShowResortDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Calculate page numbers for pagination
   const pageNumbers = useMemo(() => {
     const { current_page, total_pages } = pagination;
@@ -604,6 +783,15 @@ function BookingManagementPage() {
       minute: "2-digit",
     });
     return `${dateStr} ${timeStr}`;
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const getReadableStatus = (status) => {
@@ -661,9 +849,9 @@ function BookingManagementPage() {
 
       {/* Filters Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Search Bar */}
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-23 gap-3">
+          {/* Search Bar - 4 cols */}
+          <div className="xl:col-span-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Search
             </label>
@@ -672,86 +860,247 @@ function BookingManagementPage() {
               value={filters.search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Ref or Name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
           </div>
 
-          {/* Status Filter */}
-          <div>
+          {/* Resort Filter - 4 cols */}
+          <div id="resort-filter-container" className="relative xl:col-span-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+              Resort
             </label>
-            <select
-              value={filters.status}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
-            >
-              <option value="all">All Status</option>
-              <optgroup label="Booking Status">
-                <option value="PCON">Pending Confirmation</option>
-                <option value="ACON">Confirmed</option>
-                <option value="ACAN">Cancelled</option>
-                <option value="PAMM">Pending Amendment</option>
-                <option value="AAMM">Amendment Approved</option>
-              </optgroup>
-              <optgroup label="Assignment Status">
-                <option value="assignment:pending">Not Assigned</option>
-                <option value="assignment:assigned">Assigned</option>
-                <option value="assignment:active">Active Tracking</option>
-                <option value="assignment:completed">
-                  Assignment Completed
-                </option>
-                <option value="assignment:cancelled">
-                  Assignment Cancelled
-                </option>
-              </optgroup>
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={resortSearchTerm}
+                onChange={(e) => handleResortSearchChange(e.target.value)}
+                onFocus={handleResortFocus}
+                placeholder="Search resort..."
+                className="w-full h-[42px] px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              />
+              <i className="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            {showResortDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div
+                  onClick={() => {
+                    handleResortSelect("all");
+                    setResortSearchTerm("");
+                  }}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium text-gray-700 border-b border-gray-200"
+                >
+                  <i className="fas fa-times-circle mr-2 text-gray-400"></i>
+                  Clear / All Resorts
+                </div>
+                {filteredResorts.length > 0 ? (
+                  <>
+                    {filteredResorts.slice(0, 50).map((resort) => (
+                      <div
+                        key={resort.name}
+                        onClick={() => handleResortSelect(resort.name)}
+                        className={`px-3 py-2 hover:bg-cyan-50 cursor-pointer text-sm flex justify-between items-center ${
+                          filters.resort === resort.name
+                            ? "bg-cyan-50 text-cyan-700 font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <span>{resort.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">{resort.count}</span>
+                      </div>
+                    ))}
+                    {filteredResorts.length > 50 && (
+                      <div className="px-3 py-2 text-xs text-gray-500 italic bg-gray-50">
+                        + {filteredResorts.length - 50} more... (keep typing to
+                        narrow down)
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-sm text-gray-500 italic">
+                    No resorts found
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Province Filter */}
-          <div>
+          {/* Date From - 3 cols */}
+          <div className="xl:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Province
-            </label>
-            <select
-              value={filters.province}
-              onChange={(e) => handleFilterChange("province", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
-            >
-              <option value="all">All Provinces</option>
-              <option value="unknown">Unknown</option>
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date From */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              From
+              Date From
             </label>
             <input
               type="date"
               value={filters.dateFrom}
               onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
           </div>
 
-          {/* Date To */}
-          <div>
+          {/* Date To - 3 cols */}
+          <div className="xl:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              To
+              Date To
             </label>
             <input
               type="date"
               value={filters.dateTo}
               onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
             />
+          </div>
+
+          {/* Booking Status Filter - 3 cols */}
+          <div className="relative xl:col-span-3">
+            <label className="block text-sm font-medium mb-2">Status</label>
+            <button
+              type="button"
+              onClick={() =>
+                setShowBookingStatusDropdown(!showBookingStatusDropdown)
+              }
+              className="w-full h-[42px] px-2 py-2 border border-gray-300 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors flex items-center justify-between"
+            >
+              <span className="text-sm truncate">
+                {filters.bookingStatus.length === 0
+                  ? "All"
+                  : `${filters.bookingStatus.length} selected`}
+              </span>
+              <i
+                className={`fas fa-chevron-${
+                  showBookingStatusDropdown ? "up" : "down"
+                } text-gray-400 text-sm ml-1`}
+              ></i>
+            </button>
+            {showBookingStatusDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2">
+                  {[
+                    { value: "PCON", label: "Pending" },
+                    { value: "ACON", label: "Confirmed" },
+                    { value: "ACAN", label: "Cancelled" },
+                    { value: "PCAN", label: "Cancel Req." },
+                    { value: "PAMM", label: "Amend Req." },
+                    { value: "AAMM", label: "Amended" },
+                  ].map((status) => (
+                    <label
+                      key={status.value}
+                      className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.bookingStatus.includes(status.value)}
+                        onChange={() =>
+                          handleCheckboxToggle("bookingStatus", status.value)
+                        }
+                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                      />
+                      <span className="ml-2 text-sm">{status.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Assignment Status Filter - 3 cols */}
+          <div className="relative xl:col-span-3">
+            <label className="block text-sm font-medium mb-2">Assign</label>
+            <button
+              type="button"
+              onClick={() =>
+                setShowAssignmentStatusDropdown(!showAssignmentStatusDropdown)
+              }
+              className="w-full h-[42px] px-2 py-2 border border-gray-300 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors flex items-center justify-between"
+            >
+              <span className="text-sm truncate">
+                {filters.assignmentStatus.length === 0
+                  ? "All"
+                  : `${filters.assignmentStatus.length} selected`}
+              </span>
+              <i
+                className={`fas fa-chevron-${
+                  showAssignmentStatusDropdown ? "up" : "down"
+                } text-gray-400 text-sm ml-1`}
+              ></i>
+            </button>
+            {showAssignmentStatusDropdown && (
+              <div className="absolute z-50 w-full mt-1  bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2">
+                  {[
+                    { value: "assigned", label: "Assigned" },
+                    { value: "not_assigned", label: "Not Assigned" },
+                  ].map((status) => (
+                    <label
+                      key={status.value}
+                      className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.assignmentStatus.includes(
+                          status.value
+                        )}
+                        onChange={() =>
+                          handleCheckboxToggle("assignmentStatus", status.value)
+                        }
+                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                      />
+                      <span className="ml-2 text-sm text-nowrap">
+                        {status.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Booking Type Filter - 3 cols */}
+          <div className="relative xl:col-span-3">
+            <label className="block text-sm font-medium mb-2">Type</label>
+            <button
+              type="button"
+              onClick={() =>
+                setShowBookingTypeDropdown(!showBookingTypeDropdown)
+              }
+              className="w-full h-[42px] px-2 py-2 border border-gray-300 rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors flex items-center justify-between"
+            >
+              <span className="text-sm truncate">
+                {filters.bookingType.length === 0
+                  ? "All"
+                  : `${filters.bookingType.length} selected`}
+              </span>
+              <i
+                className={`fas fa-chevron-${
+                  showBookingTypeDropdown ? "up" : "down"
+                } text-gray-400 text-sm ml-1`}
+              ></i>
+            </button>
+            {showBookingTypeDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2">
+                  {[
+                    { value: "arrival", label: "Arrival" },
+                    { value: "departure", label: "Departure" },
+                    { value: "p2p", label: "Point to Point" },
+                  ].map((type) => (
+                    <label
+                      key={type.value}
+                      className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.bookingType.includes(type.value)}
+                        onChange={() =>
+                          handleCheckboxToggle("bookingType", type.value)
+                        }
+                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                      />
+                      <span className="ml-2 text-sm">{type.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -794,14 +1143,6 @@ function BookingManagementPage() {
               >
                 <i className="fas fa-eraser mr-2"></i>
                 Clear Filters
-              </button>
-              <button
-                onClick={handlePrint}
-                disabled={bookings.length === 0}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <i className="fas fa-print mr-2"></i>
-                Print
               </button>
               <button
                 onClick={handleSyncApi}
@@ -871,153 +1212,313 @@ function BookingManagementPage() {
             <table className="w-full">
               <thead className="bg-gray-50 text-nowrap">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "8%" }}
+                  >
                     Booking Ref
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
-                    Status
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "5%" }}
+                  >
+                    Type
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
-                    Passenger
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
-                    Pax
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "6%" }}
+                  >
                     <button
                       onClick={handleSortToggle}
-                      className="flex items-center space-x-2 hover:text-cyan-600 transition-colors"
+                      className="flex items-center space-x-1 hover:text-cyan-600 transition-colors"
                     >
-                      <span>Pickup Time</span>
+                      <span>Pickup</span>
                       <i
                         className={`fas fa-sort-${
                           filters.sortOrder === "asc" ? "up" : "down"
-                        }`}
+                        } text-xs`}
                       ></i>
                     </button>
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
+
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "12%" }}
+                  >
+                    Passenger
+                  </th>
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "4%" }}
+                  >
+                    Pax
+                  </th>
+
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "8%" }}
+                  >
                     Vehicle
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
-                    Province
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "15%" }}
+                  >
+                    Resort
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "7%" }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    className="text-center py-2 px-2 font-medium text-gray-700 border-b text-sm"
+                    style={{ width: "10%" }}
+                  >
                     Assignment
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="text-nowrap">
-                {bookings.map((booking, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                      booking.is_old_booking ? "bg-gray-100" : ""
-                    }`}
-                  >
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <a
-                        href={`#booking/${booking.ref}?from=jobs`}
-                        className={`${getCompanyClass(
-                          "text"
-                        )} hover:underline font-medium cursor-pointer`}
-                        onClick={(e) => {
-                          // Only prevent default for left click
-                          if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
-                            e.preventDefault();
-                            setSelectedBookingRef({
-                              ref: booking.ref,
-                              fromPage: "jobs",
-                            });
-                            setAppPage("booking-detail");
-                          }
-                        }}
-                      >
-                        {booking.ref}
-                      </a>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        title={getReadableStatus(booking.status)}
-                        className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap cursor-help ${
-                          booking.status === "PCON"
-                            ? "bg-cyan-100 text-cyan-800"
-                            : booking.status === "ACON"
-                            ? "bg-green-100 text-green-800"
-                            : booking.status === "PCAN"
-                            ? "bg-orange-100 text-orange-800"
-                            : booking.status === "ACAN"
-                            ? "bg-red-100 text-red-800"
-                            : booking.status === "PAMM"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : booking.status === "AAMM"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {getStatusAbbr(booking.status)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div>
+              <tbody>
+                {bookings.map((booking, index) => {
+                  // Determine booking type
+                  const getBookingType = () => {
+                    const type = booking.bookingType || "";
+
+                    // Check from booking type field first
+                    if (type && type !== "N/A") {
+                      const lowerType = type.toLowerCase();
+                      if (lowerType.includes("arrival")) {
+                        return {
+                          label: "Arrival",
+                          icon: "fa-plane-arrival",
+                          color: "text-green-600",
+                        };
+                      } else if (lowerType.includes("departure")) {
+                        return {
+                          label: "Departure",
+                          icon: "fa-plane-departure",
+                          color: "text-blue-600",
+                        };
+                      } else if (lowerType.includes("point")) {
+                        return {
+                          label: "P2P",
+                          icon: "fa-route",
+                          color: "text-purple-600",
+                        };
+                      }
+                    }
+
+                    // Fallback: Detect from dates and flight numbers
+                    const hasArrivalDate =
+                      booking.arrivalDate &&
+                      booking.arrivalDate !== "0000-00-00 00:00:00";
+                    const hasDepartureDate =
+                      booking.departureDate &&
+                      booking.departureDate !== "0000-00-00 00:00:00";
+                    const hasArrivalFlight = booking.flightNoArrival;
+                    const hasDepartureFlight = booking.flightNoDeparture;
+
+                    if (hasArrivalDate || hasArrivalFlight) {
+                      return {
+                        label: "Arrival",
+                        icon: "fa-plane-arrival",
+                        color: "text-green-600",
+                      };
+                    } else if (hasDepartureDate || hasDepartureFlight) {
+                      return {
+                        label: "Departure",
+                        icon: "fa-plane-departure",
+                        color: "text-blue-600",
+                      };
+                    } else if (!hasArrivalDate && !hasDepartureDate) {
+                      // If no arrival/departure date, likely Point to Point
+                      return {
+                        label: "P2P",
+                        icon: "fa-route",
+                        color: "text-purple-600",
+                      };
+                    }
+
+                    return {
+                      label: "N/A",
+                      icon: "fa-question",
+                      color: "text-gray-400",
+                    };
+                  };
+
+                  const bookingType = getBookingType();
+
+                  return (
+                    <tr
+                      key={index}
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        booking.is_old_booking ? "bg-gray-100" : ""
+                      }`}
+                    >
+                      {/* Booking Ref - Compact */}
+                      <td className="py-2 px-2 text-sm whitespace-nowrap">
+                        <a
+                          href={`#booking/${booking.ref}?from=jobs`}
+                          className={`${getCompanyClass(
+                            "text"
+                          )} hover:underline font-medium cursor-pointer`}
+                          onClick={(e) => {
+                            if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
+                              e.preventDefault();
+                              setSelectedBookingRef({
+                                ref: booking.ref,
+                                fromPage: "jobs",
+                              });
+                              setAppPage("booking-detail");
+                            }
+                          }}
+                        >
+                          {booking.ref}
+                        </a>
+                      </td>
+
+                      {/* Type */}
+                      <td className="py-2 px-2 text-sm whitespace-nowrap">
+                        <div
+                          className="flex items-center gap-1"
+                          title={bookingType.label}
+                        >
+                          <i
+                            className={`fas ${bookingType.icon} ${bookingType.color} text-xs`}
+                          ></i>
+                          <span
+                            className={`text-xs ${bookingType.color} font-medium`}
+                          >
+                            {bookingType.label}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Pickup Time - Compact like Job Assignments */}
+                      <td className="py-2 px-2 text-sm whitespace-nowrap">
+                        {booking.pickupDateAdjusted ? (
+                          <div>
+                            <p className="font-semibold text-orange-600 text-sm">
+                              {formatTime(booking.pickupDateAdjusted)}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {formatDate(booking.pickupDateAdjusted)}
+                            </p>
+                          </div>
+                        ) : booking.pickupDate ? (
+                          <div>
+                            <p className="font-semibold text-gray-900 text-sm">
+                              {formatTime(booking.pickupDate)}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {formatDate(booking.pickupDate)}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                      </td>
+
+                      {/* Passenger */}
+                      <td className="py-2 px-2 whitespace-nowrap">
                         <p
-                          className="font-normal text-gray-900"
+                          className="text-sm text-gray-900"
                           title={booking.passenger?.name || ""}
                         >
                           {booking.passenger?.name
-                            ? booking.passenger.name.length > 20
-                              ? booking.passenger.name.substring(0, 20) + "..."
+                            ? booking.passenger.name.length > 25
+                              ? booking.passenger.name.substring(0, 25) + "..."
                               : booking.passenger.name
                             : "-"}
                         </p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="text-sm font-medium  text-gray-900">
-                        {booking.pax}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm  text-gray-600">
-                      {formatDateTime(
-                        booking.pickupDateAdjusted || booking.pickupDate
-                      )}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {cleanVehicleName(booking.vehicle)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {booking.province || "Unknown"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {!booking.is_assigned ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                          <i className="fas fa-circle mr-1.5"></i>
-                          Not Assigned
+                      </td>
+
+                      {/* Pax */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900">
+                          {booking.pax}
                         </span>
-                      ) : booking.assignment_status === "completed" ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-                          <i className="fas fa-check-circle mr-1.5"></i>
-                          Completed
+                      </td>
+
+                      {/* Vehicle */}
+                      <td className="py-2 px-2 whitespace-nowrap">
+                        <span className="text-sm text-gray-900">
+                          {cleanVehicleName(booking.vehicle)}
                         </span>
-                      ) : booking.assignment_status === "cancelled" ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          <i className="fas fa-times-circle mr-1.5"></i>
-                          Cancelled
+                      </td>
+
+                      {/* Resort - Allow wrap */}
+                      <td className="py-2 text-center">
+                        <p
+                          className="text-sm text-gray-900 leading-tight"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                          title={
+                            booking.resort ||
+                            booking.accommodation?.name ||
+                            "ไม่ระบุ"
+                          }
+                        >
+                          {booking.resort ||
+                            booking.accommodation?.name ||
+                            "ไม่ระบุ"}
+                        </p>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        <span
+                          title={getReadableStatus(booking.status)}
+                          className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap cursor-help ${
+                            booking.status === "PCON"
+                              ? "bg-cyan-100 text-cyan-800"
+                              : booking.status === "ACON"
+                              ? "bg-green-100 text-green-800"
+                              : booking.status === "PCAN"
+                              ? "bg-orange-100 text-orange-800"
+                              : booking.status === "ACAN"
+                              ? "bg-red-100 text-red-800"
+                              : booking.status === "PAMM"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : booking.status === "AAMM"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {getStatusAbbr(booking.status)}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <i className="fas fa-user-check mr-1.5"></i>
-                          Assigned
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+
+                      {/* Assignment */}
+                      <td className="py-2 px-2 text-center whitespace-nowrap">
+                        {!booking.is_assigned ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            Not Assigned
+                          </span>
+                        ) : booking.assignment_status === "completed" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
+                            Completed
+                          </span>
+                        ) : booking.assignment_status === "cancelled" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Cancelled
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Assigned
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

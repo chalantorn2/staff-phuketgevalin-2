@@ -39,6 +39,7 @@
         $offset = (int)($_GET['offset'] ?? 0);
         $search = $_GET['search'] ?? '';
         $province = $_GET['province'] ?? 'all';
+        $resort = $_GET['resort'] ?? 'all';
         $bookingType = $_GET['booking_type'] ?? 'all'; // all, arrival, departure
         $dateFrom = $_GET['date_from'] ?? '';
         $dateTo = $_GET['date_to'] ?? '';
@@ -47,7 +48,7 @@
         $pdo = $db->getConnection();
 
         // Check if this is a default query (no filters/search)
-        $isDefaultQuery = empty($search) && empty($dateFrom) && empty($dateTo) && $province === 'all' && $bookingType === 'all';
+        $isDefaultQuery = empty($search) && empty($dateFrom) && empty($dateTo) && $province === 'all' && $resort === 'all' && $bookingType === 'all';
 
         // Build WHERE clause
         $where = [];
@@ -80,6 +81,12 @@
                 $where[] = "b.province = :province";
                 $params[':province'] = $province;
             }
+        }
+
+        if ($resort !== 'all') {
+            $where[] = "(b.resort = :resort OR b.accommodation_name = :resort2)";
+            $params[':resort'] = $resort;
+            $params[':resort2'] = $resort;
         }
 
         if ($bookingType !== 'all') {

@@ -83,6 +83,14 @@
               </div>
             </div>
 
+            <div id="resort-container" class="hidden flex items-start gap-3">
+              <i class="fas fa-hotel text-cyan-600 mt-1"></i>
+              <div>
+                <p class="text-sm text-gray-500">โซน</p>
+                <p id="resort-name" class="font-medium">-</p>
+              </div>
+            </div>
+
             <div class="flex items-start gap-3">
               <i class="fas fa-map-marker-alt text-cyan-600 mt-1"></i>
               <div class="flex-1">
@@ -261,6 +269,8 @@
         bookingRef: document.getElementById("booking-ref"),
         passengerName: document.getElementById("passenger-name"),
         passengerPhone: document.getElementById("passenger-phone"),
+        resortContainer: document.getElementById("resort-container"),
+        resortName: document.getElementById("resort-name"),
         pickupLocation: document.getElementById("pickup-location"),
         pickupDatetime: document.getElementById("pickup-datetime"),
         timeAdjustedBadge: document.getElementById("time-adjusted-badge"),
@@ -326,6 +336,14 @@
         els.bookingRef.textContent = trackingInfo.booking_ref;
         els.passengerName.textContent = trackingInfo.booking.passenger_name;
         els.passengerPhone.textContent = trackingInfo.booking.passenger_phone;
+
+        // Show resort/hotel if available
+        const resort = trackingInfo.booking.resort || trackingInfo.booking.accommodation_name;
+        if (resort) {
+          els.resortContainer.classList.remove("hidden");
+          els.resortName.textContent = resort;
+        }
+
         els.pickupLocation.textContent = trackingInfo.booking.pickup_location;
         els.pickupDatetime.textContent = trackingInfo.booking.pickup_datetime;
 

@@ -50,6 +50,7 @@ try {
                 b.pax_total,
                 COALESCE(b.flight_no_arrival, b.flight_no_departure) as flight_number,
                 b.province,
+                b.resort,
                 b.vehicle_type,
                 d.name as driver_name,
                 v.registration as vehicle_number
@@ -107,47 +108,23 @@ try {
     // Date filter (same logic as database-search.php)
     if (!empty($dateFrom) || !empty($dateTo)) {
         if (!empty($dateFrom) && !empty($dateTo)) {
-            // Both From and To specified - date range
+            // Both From and To specified - date range (aligned with Booking Management - use pickup_date only)
             $dateToEnd = date('Y-m-d', strtotime($dateTo . ' +1 day'));
-            $sql .= " AND (
-                (b.arrival_date >= :dateFrom1 AND b.arrival_date < :dateTo1)
-                OR (b.departure_date >= :dateFrom2 AND b.departure_date < :dateTo2)
-                OR (b.pickup_date >= :dateFrom3 AND b.pickup_date < :dateTo3)
-            )";
-            $params[':dateFrom1'] = $dateFrom . ' 00:00:00';
-            $params[':dateTo1'] = $dateToEnd . ' 00:00:00';
-            $params[':dateFrom2'] = $dateFrom . ' 00:00:00';
-            $params[':dateTo2'] = $dateToEnd . ' 00:00:00';
-            $params[':dateFrom3'] = $dateFrom . ' 00:00:00';
-            $params[':dateTo3'] = $dateToEnd . ' 00:00:00';
+            $sql .= " AND b.pickup_date >= :dateFrom AND b.pickup_date < :dateTo";
+            $params[':dateFrom'] = $dateFrom . ' 00:00:00';
+            $params[':dateTo'] = $dateToEnd . ' 00:00:00';
         } elseif (!empty($dateFrom)) {
-            // Only From specified - show that single day
+            // Only From specified - show that single day (aligned with Booking Management - use pickup_date only)
             $dateFromEnd = date('Y-m-d', strtotime($dateFrom . ' +1 day'));
-            $sql .= " AND (
-                (b.arrival_date >= :dateFrom1 AND b.arrival_date < :dateFromEnd1)
-                OR (b.departure_date >= :dateFrom2 AND b.departure_date < :dateFromEnd2)
-                OR (b.pickup_date >= :dateFrom3 AND b.pickup_date < :dateFromEnd3)
-            )";
-            $params[':dateFrom1'] = $dateFrom . ' 00:00:00';
-            $params[':dateFromEnd1'] = $dateFromEnd . ' 00:00:00';
-            $params[':dateFrom2'] = $dateFrom . ' 00:00:00';
-            $params[':dateFromEnd2'] = $dateFromEnd . ' 00:00:00';
-            $params[':dateFrom3'] = $dateFrom . ' 00:00:00';
-            $params[':dateFromEnd3'] = $dateFromEnd . ' 00:00:00';
+            $sql .= " AND b.pickup_date >= :dateFrom AND b.pickup_date < :dateFromEnd";
+            $params[':dateFrom'] = $dateFrom . ' 00:00:00';
+            $params[':dateFromEnd'] = $dateFromEnd . ' 00:00:00';
         } else {
-            // Only To specified - show that single day
+            // Only To specified - show that single day (aligned with Booking Management - use pickup_date only)
             $dateToEnd = date('Y-m-d', strtotime($dateTo . ' +1 day'));
-            $sql .= " AND (
-                (b.arrival_date >= :dateTo1 AND b.arrival_date < :dateToEnd1)
-                OR (b.departure_date >= :dateTo2 AND b.departure_date < :dateToEnd2)
-                OR (b.pickup_date >= :dateTo3 AND b.pickup_date < :dateToEnd3)
-            )";
-            $params[':dateTo1'] = $dateTo . ' 00:00:00';
-            $params[':dateToEnd1'] = $dateToEnd . ' 00:00:00';
-            $params[':dateTo2'] = $dateTo . ' 00:00:00';
-            $params[':dateToEnd2'] = $dateToEnd . ' 00:00:00';
-            $params[':dateTo3'] = $dateTo . ' 00:00:00';
-            $params[':dateToEnd3'] = $dateToEnd . ' 00:00:00';
+            $sql .= " AND b.pickup_date >= :dateTo AND b.pickup_date < :dateToEnd";
+            $params[':dateTo'] = $dateTo . ' 00:00:00';
+            $params[':dateToEnd'] = $dateToEnd . ' 00:00:00';
         }
     }
 

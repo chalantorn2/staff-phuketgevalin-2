@@ -35,6 +35,21 @@ class ProvinceMapping
         'กระบี่' => 'Krabi',
         'KBV' => 'Krabi',
 
+        // Phang Nga - พังงา
+        'Phang Nga' => 'Phang Nga',
+        'พังงา' => 'Phang Nga',
+
+        // Trang - สนามบินตรัง
+        'Trang' => 'Trang',
+        'Trang Airport' => 'Trang',
+        'สนามบินตรัง' => 'Trang',
+        'ตรัง' => 'Trang',
+        'TST' => 'Trang',
+
+        // Satun - สตูล
+        'Satun' => 'Satun',
+        'สตูล' => 'Satun',
+
         // Surat Thani (Koh Samui) - สนามบินสมุย
         'Samui' => 'Surat Thani',
         'Koh Samui' => 'Surat Thani',
@@ -201,14 +216,12 @@ class ProvinceMapping
         // Return only the provinces that the business actually uses
         // Based on user request: only show specific provinces
         $activeProvinces = [
-            'Bangkok',
-            'Chiang Mai',
-            'Chiang Rai',
-            'Kanchanaburi',
-            'Krabi',
-            'Phuket',
-            'Rayong',
-            'Surat Thani', // สมุย
+            'Phuket',      // 1. ภูเก็ต
+            'Surat Thani', // 2. สุราษฎร์ธานี
+            'Phang Nga',   // 3. พังงา
+            'Krabi',       // 4. กระบี่
+            'Trang',       // 5. ตรัง
+            'Satun',       // 6. สตูล
         ];
 
         sort($activeProvinces);
@@ -292,28 +305,36 @@ class ProvinceMapping
 
         $provinceMap = [
             // English names
+            'Phuket' => 'Phuket',
+            'Surat Thani' => 'Surat Thani',
+            'Phang Nga' => 'Phang Nga',
+            'Krabi' => 'Krabi',
+            'Trang' => 'Trang',
+            'Satun' => 'Satun',
+
+            // Other provinces (for backward compatibility)
             'Bangkok' => 'Bangkok',
             'Chiang Mai' => 'Chiang Mai',
             'Chiang Rai' => 'Chiang Rai',
             'Kanchanaburi' => 'Kanchanaburi',
-            'Krabi' => 'Krabi',
-            'Phuket' => 'Phuket',
             'Rayong' => 'Rayong',
-            'Surat Thani' => 'Surat Thani',
-            'Phang Nga' => 'Phang Nga',
             'Songkhla' => 'Songkhla',
 
             // Thai names
+            'ภูเก็ต' => 'Phuket',
+            'สุราษฎร์ธานี' => 'Surat Thani',
+            'พังงา' => 'Phang Nga',
+            'กระบี่' => 'Krabi',
+            'ตรัง' => 'Trang',
+            'สตูล' => 'Satun',
+
+            // Other Thai names (for backward compatibility)
             'กรุงเทพ' => 'Bangkok',
             'กรุงเทพมหานคร' => 'Bangkok',
             'เชียงใหม่' => 'Chiang Mai',
             'เชียงราย' => 'Chiang Rai',
             'กาญจนบุรี' => 'Kanchanaburi',
-            'กระบี่' => 'Krabi',
-            'ภูเก็ต' => 'Phuket',
             'ระยอง' => 'Rayong',
-            'สุราษฎร์ธานี' => 'Surat Thani',
-            'พังงา' => 'Phang Nga',
             'สงขลา' => 'Songkhla',
         ];
 

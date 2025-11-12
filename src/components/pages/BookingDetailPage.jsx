@@ -72,14 +72,6 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
   });
   const [assignLoading, setAssignLoading] = useState(false);
 
-  // Meeting point state
-  const [meetingPoint, setMeetingPoint] = useState({
-    accommodation: "",
-    address1: "",
-    address2: "",
-    address3: "",
-  });
-
   // === Assignment Functions ===
   const fetchAssignment = async () => {
     try {
@@ -127,40 +119,6 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
     });
   };
 
-  const updateMeetingPointToHolidayTaxis = async () => {
-    try {
-      // Check if meeting point has been modified
-      const hasChanges =
-        meetingPoint.accommodation ||
-        meetingPoint.address1 ||
-        meetingPoint.address2 ||
-        meetingPoint.address3;
-
-      if (!hasChanges) {
-        return { success: true }; // No changes, skip update
-      }
-
-      // Prepare update data according to Holiday Taxis API spec
-      const updateData = {
-        request: {
-          status: "AAMM", // Amendment Approved
-          newpickupaccom: meetingPoint.accommodation || "",
-          newpickupaddress1: meetingPoint.address1 || "",
-          newpickupaddress2: meetingPoint.address2 || "",
-          newpickupaddress3: meetingPoint.address3 || "",
-        }
-      };
-
-      // Call Holiday Taxis API to update meeting point
-      const result = await backendApi.holidayTaxis.updateBooking(ref, updateData);
-
-      return result;
-    } catch (error) {
-      console.error("Error updating meeting point:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
   const handleAssignJob = async () => {
     if (!assignmentForm.driver_id || !assignmentForm.vehicle_id) {
       alert("Please select driver and vehicle");
@@ -181,14 +139,7 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
     try {
       setAssignLoading(true);
 
-      // Step 1: Update meeting point to Holiday Taxis if modified
-      const meetingPointResult = await updateMeetingPointToHolidayTaxis();
-      if (!meetingPointResult.success) {
-        alert(`Failed to update meeting point: ${meetingPointResult.error || "Unknown error"}`);
-        return;
-      }
-
-      // Step 2: Assign job locally
+      // Assign job locally
       const response = await fetch("/api/assignments/assign.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -229,14 +180,7 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
     try {
       setAssignLoading(true);
 
-      // Step 1: Update meeting point to Holiday Taxis if modified
-      const meetingPointResult = await updateMeetingPointToHolidayTaxis();
-      if (!meetingPointResult.success) {
-        alert(`Failed to update meeting point: ${meetingPointResult.error || "Unknown error"}`);
-        return;
-      }
-
-      // Step 2: Reassign job locally
+      // Reassign job locally
       const response = await fetch("/api/assignments/assign.php", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -498,39 +442,6 @@ ${trackingLink.tracking_url}
       setDriverSearchTerm("");
       setVehicleSearchTerm("");
       setAssignmentForm({ driver_id: "", vehicle_id: "", notes: "" });
-    }
-
-    // Load meeting point from booking data
-    const booking = bookingDetail?.booking;
-    if (booking) {
-      const arrival = booking?.arrival || {};
-      const departure = booking?.departure || {};
-      const general = booking?.general || {};
-
-      // Determine which direction to use based on booking type
-      const bookingTypeLower = general.bookingtype?.toLowerCase() || "";
-      const isArrival = bookingTypeLower.includes("arrival") || bookingTypeLower.includes("outbound");
-
-      // Get meeting point from the appropriate direction
-      const accommodationName = isArrival
-        ? (arrival.accommodationname || general.resort)
-        : (departure.accommodationname || arrival.accommodationname || general.resort);
-      const address1 = isArrival
-        ? arrival.accommodationaddress1
-        : departure.accommodationaddress1 || arrival.accommodationaddress1;
-      const address2 = isArrival
-        ? arrival.accommodationaddress2
-        : departure.accommodationaddress2 || arrival.accommodationaddress2;
-      const address3 = isArrival
-        ? arrival.accommodationaddress3
-        : departure.accommodationaddress3 || arrival.accommodationaddress3;
-
-      setMeetingPoint({
-        accommodation: accommodationName || "",
-        address1: address1 || "",
-        address2: address2 || "",
-        address3: address3 || "",
-      });
     }
 
     setShowDriverDropdown(false);
@@ -1736,99 +1647,6 @@ ${trackingLink.tracking_url}
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Meeting Point Section */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <i className="fas fa-map-marker-alt text-blue-600"></i>
-                  <label className="block text-sm font-semibold text-gray-900">
-                    Meeting Point (จุดรับ)
-                  </label>
-                </div>
-
-                <div className="space-y-3">
-                  {/* Accommodation Name */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Accommodation / Building Name
-                    </label>
-                    <input
-                      type="text"
-                      value={meetingPoint.accommodation}
-                      onChange={(e) =>
-                        setMeetingPoint({
-                          ...meetingPoint,
-                          accommodation: e.target.value,
-                        })
-                      }
-                      placeholder="e.g., Hotel Hilton, Terminal 21"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Address Line 1 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Address Line 1
-                    </label>
-                    <input
-                      type="text"
-                      value={meetingPoint.address1}
-                      onChange={(e) =>
-                        setMeetingPoint({
-                          ...meetingPoint,
-                          address1: e.target.value,
-                        })
-                      }
-                      placeholder="Street address"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Address Line 2 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Address Line 2
-                    </label>
-                    <input
-                      type="text"
-                      value={meetingPoint.address2}
-                      onChange={(e) =>
-                        setMeetingPoint({
-                          ...meetingPoint,
-                          address2: e.target.value,
-                        })
-                      }
-                      placeholder="City, District"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Address Line 3 */}
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Address Line 3
-                    </label>
-                    <input
-                      type="text"
-                      value={meetingPoint.address3}
-                      onChange={(e) =>
-                        setMeetingPoint({
-                          ...meetingPoint,
-                          address3: e.target.value,
-                        })
-                      }
-                      placeholder="Province, Postal Code"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <p className="text-xs text-blue-700 mt-3">
-                  <i className="fas fa-info-circle mr-1"></i>
-                  ข้อมูลจุดรับจะถูกส่งไปอัพเดทที่ Holiday Taxis เมื่อกด Assign Job
-                </p>
               </div>
 
               {/* Notes */}

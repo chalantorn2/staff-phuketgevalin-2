@@ -166,6 +166,8 @@ try {
             'booking' => [
                 'passenger_name' => $tokenData['passenger_name'] ?? '-',
                 'passenger_phone' => $tokenData['passenger_phone'] ?? '-',
+                'resort' => $tokenData['resort'] ?? null,
+                'accommodation_name' => $tokenData['accommodation_name'] ?? null,
                 'pickup_location' => $pickupLocation,
                 'dropoff_location' => $dropoffLocation,
                 'pickup_datetime' => $pickupDateTime ? date('d/m/Y H:i', strtotime($pickupDateTime)) : '-',

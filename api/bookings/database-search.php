@@ -1,5 +1,5 @@
 <?php
-error_log("DEBUG: New database-search.php loaded - " . date('Y-m-d H:i:s'));
+error_log("DEBUG: database-search.php loaded with pickup_date filter - " . date('Y-m-d H:i:s'));
 // api/bookings/database-search.php - Advanced Booking Search API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -18,12 +18,15 @@ try {
     $offset = ($page - 1) * $limit;
 
     // Filter parameters
-    $status = $_GET['status'] ?? 'all';
+    $bookingStatuses = $_GET['booking_status'] ?? [];
+    $assignmentStatuses = $_GET['assignment_status'] ?? [];
+    $bookingTypes = $_GET['booking_type'] ?? [];
     $dateFrom = $_GET['date_from'] ?? null;
     $dateTo = $_GET['date_to'] ?? null;
     $dateType = $_GET['date_type'] ?? 'pickup';
     $search = trim($_GET['search'] ?? '');
     $province = $_GET['province'] ?? 'all';
+    $resort = trim($_GET['resort'] ?? 'all');
     $sortBy = $_GET['sort_by'] ?? 'pickup';
     $sortOrder = strtoupper($_GET['sort_order'] ?? 'ASC');
 
@@ -55,28 +58,52 @@ try {
 
     // Check if this is still default query (for limiting max results)
     $isDefaultQuery = empty($search) && empty($dateFrom) && empty($dateTo) &&
-        ($status === 'all' || $status === 'ACON') &&
-        $province === 'all';
+        empty($bookingStatuses) &&
+        empty($assignmentStatuses) &&
+        empty($bookingTypes) &&
+        $province === 'all' &&
+        $resort === 'all';
 
-    error_log("isDefaultQuery: " . ($isDefaultQuery ? 'true' : 'false') . " | search: '$search' | dateFrom: '$dateFrom' | dateTo: '$dateTo' | status: '$status' | province: '$province'");
+    error_log("isDefaultQuery: " . ($isDefaultQuery ? 'true' : 'false') . " | search: '$search' | dateFrom: '$dateFrom' | dateTo: '$dateTo' | province: '$province' | resort: '$resort'");
 
-    // Status filter (supports both booking status and assignment status)
-    if ($status !== 'all') {
-        if (strpos($status, 'assignment:') === 0) {
-            // Assignment status filter
-            $assignmentStatus = substr($status, 11); // Remove "assignment:" prefix
-            if ($assignmentStatus === 'pending') {
-                // Not assigned (no assignment record)
-                $whereClause .= " AND dva.id IS NULL";
-            } else {
-                // Has assignment with specific status
-                $whereClause .= " AND dva.status = ?";
-                $params[] = $assignmentStatus;
-            }
-        } else {
-            // Booking status filter
-            $whereClause .= " AND b.ht_status = ?";
+    // Booking Status filter (multiple values)
+    if (!empty($bookingStatuses) && is_array($bookingStatuses)) {
+        $placeholders = implode(',', array_fill(0, count($bookingStatuses), '?'));
+        $whereClause .= " AND b.ht_status IN ($placeholders)";
+        foreach ($bookingStatuses as $status) {
             $params[] = $status;
+        }
+    }
+
+    // Assignment Status filter (multiple values)
+    if (!empty($assignmentStatuses) && is_array($assignmentStatuses)) {
+        $assignmentConditions = [];
+        foreach ($assignmentStatuses as $status) {
+            if ($status === 'assigned') {
+                $assignmentConditions[] = "dva.id IS NOT NULL";
+            } elseif ($status === 'not_assigned') {
+                $assignmentConditions[] = "dva.id IS NULL";
+            }
+        }
+        if (!empty($assignmentConditions)) {
+            $whereClause .= " AND (" . implode(' OR ', $assignmentConditions) . ")";
+        }
+    }
+
+    // Booking Type filter (multiple values)
+    if (!empty($bookingTypes) && is_array($bookingTypes)) {
+        $typeConditions = [];
+        foreach ($bookingTypes as $type) {
+            if ($type === 'arrival') {
+                $typeConditions[] = "(b.arrival_date IS NOT NULL AND b.arrival_date != '0000-00-00 00:00:00')";
+            } elseif ($type === 'departure') {
+                $typeConditions[] = "(b.departure_date IS NOT NULL AND b.departure_date != '0000-00-00 00:00:00' AND (b.arrival_date IS NULL OR b.arrival_date = '0000-00-00 00:00:00'))";
+            } elseif ($type === 'p2p') {
+                $typeConditions[] = "((b.arrival_date IS NULL OR b.arrival_date = '0000-00-00 00:00:00') AND (b.departure_date IS NULL OR b.departure_date = '0000-00-00 00:00:00'))";
+            }
+        }
+        if (!empty($typeConditions)) {
+            $whereClause .= " AND (" . implode(' OR ', $typeConditions) . ")";
         }
     }
 
@@ -88,18 +115,9 @@ try {
                 $params[] = $dateFrom;
                 $params[] = $dateTo;
             } else {
-                // Check arrival_date, departure_date, or pickup_date
-                // Use >= and < for accurate date filtering (includes full day)
+                // Use pickup_date as primary filter for date range
                 $dateToEnd = date('Y-m-d', strtotime($dateTo . ' +1 day'));
-                $whereClause .= " AND (
-                    (b.arrival_date >= ? AND b.arrival_date < ?)
-                    OR (b.departure_date >= ? AND b.departure_date < ?)
-                    OR (b.pickup_date >= ? AND b.pickup_date < ?)
-                )";
-                $params[] = $dateFrom . ' 00:00:00';
-                $params[] = $dateToEnd . ' 00:00:00';
-                $params[] = $dateFrom . ' 00:00:00';
-                $params[] = $dateToEnd . ' 00:00:00';
+                $whereClause .= " AND b.pickup_date >= ? AND b.pickup_date < ?";
                 $params[] = $dateFrom . ' 00:00:00';
                 $params[] = $dateToEnd . ' 00:00:00';
             }
@@ -108,17 +126,9 @@ try {
                 $whereClause .= " AND DATE(b.last_action_date) = ?";
                 $params[] = $dateFrom;
             } else {
-                // Use >= for single date (includes full day from 00:00:00)
+                // Use pickup_date as primary filter for Date From
                 $dateFromEnd = date('Y-m-d', strtotime($dateFrom . ' +1 day'));
-                $whereClause .= " AND (
-                    (b.arrival_date >= ? AND b.arrival_date < ?)
-                    OR (b.departure_date >= ? AND b.departure_date < ?)
-                    OR (b.pickup_date >= ? AND b.pickup_date < ?)
-                )";
-                $params[] = $dateFrom . ' 00:00:00';
-                $params[] = $dateFromEnd . ' 00:00:00';
-                $params[] = $dateFrom . ' 00:00:00';
-                $params[] = $dateFromEnd . ' 00:00:00';
+                $whereClause .= " AND b.pickup_date >= ? AND b.pickup_date < ?";
                 $params[] = $dateFrom . ' 00:00:00';
                 $params[] = $dateFromEnd . ' 00:00:00';
             }
@@ -127,17 +137,9 @@ try {
                 $whereClause .= " AND DATE(b.last_action_date) = ?";
                 $params[] = $dateTo;
             } else {
-                // Use < for single date (includes full day until 23:59:59)
+                // Use pickup_date as primary filter for Date To
                 $dateToEnd = date('Y-m-d', strtotime($dateTo . ' +1 day'));
-                $whereClause .= " AND (
-                    (b.arrival_date >= ? AND b.arrival_date < ?)
-                    OR (b.departure_date >= ? AND b.departure_date < ?)
-                    OR (b.pickup_date >= ? AND b.pickup_date < ?)
-                )";
-                $params[] = $dateTo . ' 00:00:00';
-                $params[] = $dateToEnd . ' 00:00:00';
-                $params[] = $dateTo . ' 00:00:00';
-                $params[] = $dateToEnd . ' 00:00:00';
+                $whereClause .= " AND b.pickup_date >= ? AND b.pickup_date < ?";
                 $params[] = $dateTo . ' 00:00:00';
                 $params[] = $dateToEnd . ' 00:00:00';
             }
@@ -160,6 +162,15 @@ try {
             $whereClause .= " AND b.province = ?";
             $params[] = $province;
         }
+    }
+
+    // Resort filter
+    if ($resort !== 'all' && !empty($resort)) {
+        // Search in both resort and accommodation_name fields
+        $whereClause .= " AND (LOWER(b.resort) LIKE LOWER(?) OR LOWER(b.accommodation_name) LIKE LOWER(?))";
+        $resortParam = '%' . $resort . '%';
+        $params[] = $resortParam;
+        $params[] = $resortParam;
     }
 
     $maxDefaultResults = 100;
@@ -362,6 +373,7 @@ try {
                 'date_type' => $dateType,
                 'search' => $search,
                 'province' => $province,
+                'resort' => $resort,
                 'limit' => (int)$limit
             ],
             'lastUpdate' => date('Y-m-d H:i:s')

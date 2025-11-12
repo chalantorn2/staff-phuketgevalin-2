@@ -43,6 +43,7 @@ function BookingOverviewPage() {
           flightNumber: false,
           vehicle: true,
           province: true,
+          resort: false,
           driver: false,
           vehicleNumber: false,
         };
@@ -336,6 +337,7 @@ function BookingOverviewPage() {
       if (visibleColumns.flightNumber) headers.push("Flight No.");
       if (visibleColumns.vehicle) headers.push("Vehicle");
       if (visibleColumns.province) headers.push("Province");
+      if (visibleColumns.resort) headers.push("Resort");
       if (visibleColumns.driver) headers.push("Driver");
       if (visibleColumns.vehicleNumber) headers.push("Vehicle No.");
 
@@ -357,6 +359,7 @@ function BookingOverviewPage() {
         if (visibleColumns.flightNumber) row.push(booking.flight_number || "");
         if (visibleColumns.vehicle) row.push(booking.vehicle_type || "");
         if (visibleColumns.province) row.push(booking.province || "");
+        if (visibleColumns.resort) row.push(booking.resort || booking.accommodation_name || "");
         if (visibleColumns.driver) row.push(booking.driver_name || "");
         if (visibleColumns.vehicleNumber)
           row.push(booking.vehicle_number || "");
@@ -449,6 +452,7 @@ function BookingOverviewPage() {
     if (visibleColumns.flightNumber) tableHeaders.push("Flight No.");
     if (visibleColumns.vehicle) tableHeaders.push("Vehicle");
     if (visibleColumns.province) tableHeaders.push("Province");
+    if (visibleColumns.resort) tableHeaders.push("Resort");
     if (visibleColumns.driver) tableHeaders.push("Driver");
     if (visibleColumns.vehicleNumber) tableHeaders.push("Vehicle No.");
 
@@ -480,6 +484,7 @@ function BookingOverviewPage() {
           cells.push(vehicleType);
         }
         if (visibleColumns.province) cells.push(booking.province || "Unknown");
+        if (visibleColumns.resort) cells.push(booking.resort || booking.accommodation_name || "-");
         if (visibleColumns.driver) cells.push(booking.driver_name || "-");
         if (visibleColumns.vehicleNumber)
           cells.push(booking.vehicle_number || "-");
@@ -606,6 +611,7 @@ function BookingOverviewPage() {
                       { key: "flightNumber", label: "Flight Number" },
                       { key: "vehicle", label: "Vehicle Type" },
                       { key: "province", label: "Province" },
+                      { key: "resort", label: "Resort" },
                       { key: "driver", label: "Driver Name" },
                       { key: "vehicleNumber", label: "Vehicle Number" },
                     ].map((col) => (
@@ -797,7 +803,7 @@ function BookingOverviewPage() {
           {/* Date From */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              From
+              Date From
             </label>
             <input
               type="date"
@@ -810,7 +816,7 @@ function BookingOverviewPage() {
           {/* Date To */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              To
+              Date To
             </label>
             <input
               type="date"
@@ -955,6 +961,11 @@ function BookingOverviewPage() {
                       Province
                     </th>
                   )}
+                  {visibleColumns.resort && (
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
+                      Resort
+                    </th>
+                  )}
                   {visibleColumns.driver && (
                     <th className="text-left py-3 px-4 font-medium text-gray-700 border-b">
                       Driver
@@ -1068,6 +1079,11 @@ function BookingOverviewPage() {
                           <span className="text-sm text-gray-900">
                             {booking.province || "Unknown"}
                           </span>
+                        </td>
+                      )}
+                      {visibleColumns.resort && (
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {booking.resort || booking.accommodation_name || "-"}
                         </td>
                       )}
                       {visibleColumns.driver && (
