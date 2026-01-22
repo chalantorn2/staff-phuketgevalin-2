@@ -125,13 +125,13 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
       return;
     }
 
-    // ตรวจสอบ booking status - อนุญาตให้ ACON และ AAMM assign job ได้
+    // ตรวจสอบ booking status - อนุญาตให้ PCON, ACON และ AAMM assign job ได้
     const booking = bookingDetail?.booking;
     const bookingStatus = booking?.general?.status;
-    const allowedStatuses = ["ACON", "AAMM"];
+    const allowedStatuses = ["PCON", "ACON", "AAMM"];
     if (!allowedStatuses.includes(bookingStatus)) {
       alert(
-        "Cannot assign job. Only confirmed bookings (ACON) or amendment approved bookings (AAMM) can be assigned."
+        "Cannot assign job. Only pending (PCON), confirmed (ACON), or amendment approved (AAMM) bookings can be assigned."
       );
       return;
     }
@@ -360,11 +360,15 @@ function BookingDetailPage({ bookingRef, onBack, fromPage = "dashboard" }) {
     if (general.infants) passengers.push(`${general.infants} Infants`);
     const passengerCount = passengers.join(", ") || "N/A";
 
+    // Get resort (only resort field, not accommodation_name)
+    const resort = general.resort || null;
+
     const message = `🚗 งานใหม่จาก Phuket Gevalin
 
 📋 Booking: ${ref}
 👤 ชื่อลูกค้า: ${general.passengername || "N/A"}
 👥 จำนวน: ${passengerCount}
+${resort ? `🏨 โซน: ${resort}` : ""}
 
 📅 วันที่รับ: ${formatDateTime(pickupDate)}${
       isTimeAdjusted ? " (เวลาใหม่)" : ""
@@ -822,21 +826,23 @@ ${trackingLink.tracking_url}
             onClick={openAssignModal}
             disabled={
               !assignment &&
+              general.status !== "PCON" &&
               general.status !== "ACON" &&
               general.status !== "AAMM"
             }
             className={`group px-4 py-2 text-sm font-medium rounded-lg text-white ${
               assignment
                 ? "bg-green-600 hover:bg-green-700"
-                : general.status === "ACON" || general.status === "AAMM"
+                : general.status === "PCON" || general.status === "ACON" || general.status === "AAMM"
                 ? "bg-yellow-600 hover:bg-yellow-700"
                 : "bg-gray-400 cursor-not-allowed"
             } disabled:opacity-50`}
             title={
               !assignment &&
+              general.status !== "PCON" &&
               general.status !== "ACON" &&
               general.status !== "AAMM"
-                ? "Only confirmed bookings (ACON) or amendment approved bookings (AAMM) can be assigned"
+                ? "Only pending (PCON), confirmed (ACON), or amendment approved (AAMM) bookings can be assigned"
                 : ""
             }
           >

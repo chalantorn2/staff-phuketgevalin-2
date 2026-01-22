@@ -29,6 +29,12 @@ export default function TestSyncPage() {
   const [prodBookingData, setProdBookingData] = useState(null);
   const [prodError, setProdError] = useState(null);
 
+  // Fetch single booking from Test API
+  const [testBookingRef, setTestBookingRef] = useState("");
+  const [testLoading, setTestLoading] = useState(false);
+  const [testBookingData, setTestBookingData] = useState(null);
+  const [testError, setTestError] = useState(null);
+
   const handleSync = async () => {
     setLoading(true);
     setError(null);
@@ -145,6 +151,33 @@ export default function TestSyncPage() {
     }
   };
 
+  const handleFetchTestBooking = async () => {
+    if (!testBookingRef.trim()) {
+      setTestError("Please enter booking reference");
+      return;
+    }
+
+    setTestLoading(true);
+    setTestError(null);
+    setTestBookingData(null);
+
+    try {
+      const response = await backendApi.holidayTaxis.getBookingByRefTest(
+        testBookingRef.trim()
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || "Failed to fetch booking from Test API");
+      }
+
+      setTestBookingData(response.data);
+    } catch (err) {
+      setTestError(err.message);
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -154,6 +187,332 @@ export default function TestSyncPage() {
         <p className="text-sm text-gray-600">
           ทดสอบและจัดการการซิงค์ข้อมูล Booking จาก Holiday Taxis
         </p>
+      </div>
+
+      {/* Fetch Single Booking from Test API */}
+      <div className="bg-white rounded-lg shadow p-6 max-w-2xl mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+            TEST API
+          </span>
+          Fetch Single Booking (GET /bookings/{"{bookingRef}"})
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          ดึงข้อมูล Booking เดี่ยวจาก Test API โดยใช้ Booking Reference
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Booking Reference
+            </label>
+            <input
+              type="text"
+              value={testBookingRef}
+              onChange={(e) => setTestBookingRef(e.target.value)}
+              onKeyPress={(e) =>
+                e.key === "Enter" && handleFetchTestBooking()
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="e.g., TCS-25581676"
+            />
+          </div>
+
+          <button
+            onClick={handleFetchTestBooking}
+            disabled={testLoading}
+            className={`w-full bg-yellow-600 text-white px-4 py-2 rounded-md font-medium ${
+              testLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-yellow-700"
+            }`}
+          >
+            {testLoading
+              ? "Fetching..."
+              : "🔍 Fetch Booking from Test API"}
+          </button>
+        </div>
+
+        {testError && (
+          <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <p className="font-medium">Error:</p>
+            <p>{testError}</p>
+          </div>
+        )}
+
+        {testBookingData && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-semibold text-green-900">
+                  ✅ Booking{" "}
+                  {testBookingData.action === "created" ? "Created" : "Updated"}{" "}
+                  Successfully!
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  Booking has been saved to database from Test API
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const fullData = testBookingData.full_api_response || testBookingData.booking_data;
+                  const formatted = JSON.stringify(fullData, null, 2);
+                  navigator.clipboard.writeText(formatted);
+                  alert("Full API response copied to clipboard!");
+                }}
+                className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+              >
+                📋 Copy Full JSON
+              </button>
+            </div>
+
+            {/* Summary Card */}
+            <div className="bg-white rounded-lg p-3 mb-3 border border-green-300">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="font-medium text-gray-700">Booking Ref:</span>
+                <span className="text-gray-900 font-semibold">
+                  {testBookingData.booking_ref}
+                </span>
+
+                <span className="font-medium text-gray-700">Action:</span>
+                <span
+                  className={`font-semibold ${
+                    testBookingData.action === "created"
+                      ? "text-green-700"
+                      : "text-cyan-700"
+                  }`}
+                >
+                  {testBookingData.action === "created"
+                    ? "✨ New Booking"
+                    : "🔄 Updated"}
+                </span>
+
+                <span className="font-medium text-gray-700">Status:</span>
+                <span className="text-gray-900">{testBookingData.status}</span>
+
+                <span className="font-medium text-gray-700">Passenger:</span>
+                <span className="text-gray-900">
+                  {testBookingData.passenger || "-"}
+                </span>
+
+                <span className="font-medium text-gray-700">Pickup Date:</span>
+                <span className="text-gray-900">
+                  {testBookingData.pickup_date || "-"}
+                </span>
+
+                {testBookingData.province && (
+                  <>
+                    <span className="font-medium text-gray-700">Province:</span>
+                    <span className="text-gray-900">
+                      {testBookingData.province}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+            {/* Detailed Booking Data */}
+            <div className="space-y-2 text-sm">
+              {/* General Info */}
+              {testBookingData.booking_data?.general && (
+                <div className="mb-3">
+                  <p className="font-semibold text-green-900 mb-2">
+                    General Information:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                    <span className="font-medium text-gray-700">
+                      Booking Ref:
+                    </span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.bookingreference ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Status:</span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.status || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Booking Type:
+                    </span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.bookingtype || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Passenger:
+                    </span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.passengername ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Email:</span>
+                    <span className="text-gray-900 text-xs break-all">
+                      {testBookingData.booking_data.general.passengeremail ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Phone:</span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.passengertelno ||
+                        "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">Vehicle:</span>
+                    <span className="text-gray-900">
+                      {testBookingData.booking_data.general.vehicle || "-"}
+                    </span>
+
+                    <span className="font-medium text-gray-700">
+                      Passengers:
+                    </span>
+                    <span className="text-gray-900">
+                      A: {testBookingData.booking_data.general.adults || 0}, C:{" "}
+                      {testBookingData.booking_data.general.children || 0}, I:{" "}
+                      {testBookingData.booking_data.general.infants || 0}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Arrival Info */}
+              {testBookingData.booking_data?.arrival &&
+                Object.keys(testBookingData.booking_data.arrival).length >
+                  0 && (
+                  <div className="mb-3">
+                    <p className="font-semibold text-green-900 mb-2">
+                      Arrival Information:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                      <span className="font-medium text-gray-700">
+                        Arrival Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.arrival.arrivaldate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Flight No:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.arrival.flightno || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        From Airport:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.arrival.fromairport ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Accommodation:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.arrival
+                          .accommodationname || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Address:
+                      </span>
+                      <span className="text-gray-900 text-xs">
+                        {[
+                          testBookingData.booking_data.arrival
+                            .accommodationaddress1,
+                          testBookingData.booking_data.arrival
+                            .accommodationaddress2,
+                        ]
+                          .filter(Boolean)
+                          .join(", ") || "-"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+              {/* Departure Info */}
+              {testBookingData.booking_data?.departure &&
+                Object.keys(testBookingData.booking_data.departure).length >
+                  0 && (
+                  <div className="mb-3">
+                    <p className="font-semibold text-green-900 mb-2">
+                      Departure Information:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded">
+                      <span className="font-medium text-gray-700">
+                        Departure Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.departure.departuredate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Pickup Date:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.departure.pickupdate ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Flight No:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.departure.flightno || "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        To Airport:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.departure.toairport ||
+                          "-"}
+                      </span>
+
+                      <span className="font-medium text-gray-700">
+                        Accommodation:
+                      </span>
+                      <span className="text-gray-900">
+                        {testBookingData.booking_data.departure
+                          .accommodationname || "-"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Full JSON Data Section */}
+            <div className="mt-4 bg-gray-900 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-gray-100 text-sm">
+                  📄 Complete API Response (All Fields)
+                </p>
+                <button
+                  onClick={() => {
+                    const fullData = testBookingData.full_api_response || testBookingData.booking_data;
+                    const formatted = JSON.stringify(fullData, null, 2);
+                    navigator.clipboard.writeText(formatted);
+                    alert("Complete JSON copied!");
+                  }}
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                >
+                  📋 Copy All
+                </button>
+              </div>
+              <pre className="text-xs text-green-400 overflow-x-auto max-h-96 overflow-y-auto bg-gray-950 p-3 rounded">
+                {JSON.stringify(
+                  testBookingData.full_api_response || testBookingData.booking_data,
+                  null,
+                  2
+                )}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fetch Single Booking from Production API */}

@@ -89,8 +89,8 @@ try {
                 sendResponse(false, null, 'Booking not found', 404);
             }
 
-            // อนุญาตให้ ACON (Confirmed) และ AAMM (Amendment Approved) assign job ได้
-            $allowedStatuses = ['ACON', 'AAMM'];
+            // อนุญาตให้ PCON (Pending), ACON (Confirmed) และ AAMM (Amendment Approved) assign job ได้
+            $allowedStatuses = ['PCON', 'ACON', 'AAMM'];
             if (!in_array($booking['ht_status'], $allowedStatuses)) {
                 $statusMap = [
                     'PCON' => 'Pending Confirmation',
@@ -100,7 +100,7 @@ try {
                     'AAMM' => 'Amendment Approved'
                 ];
                 $statusName = $statusMap[$booking['ht_status']] ?? $booking['ht_status'];
-                sendResponse(false, null, "Cannot assign job. Booking status is '{$statusName}'. Only confirmed bookings (ACON) or amendment approved bookings (AAMM) can be assigned.", 400);
+                sendResponse(false, null, "Cannot assign job. Booking status is '{$statusName}'. Only pending (PCON), confirmed (ACON), or amendment approved (AAMM) bookings can be assigned.", 400);
             }
 
             // ตรวจสอบว่ามี assignment อยู่แล้วหรือไม่

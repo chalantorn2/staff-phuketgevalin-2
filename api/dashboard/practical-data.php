@@ -79,9 +79,9 @@ try {
                             b.passenger_name,
                             b.pickup_date,
                             b.province,
+                            b.resort,
                             b.vehicle_type,
                             b.pax_total,
-                            b.accommodation_name,
                             CASE
                                 WHEN b.pickup_date <= :next3hours THEN 'urgent'
                                 WHEN DATE(b.pickup_date) = CURDATE() THEN 'today'
@@ -115,6 +115,7 @@ try {
                             b.passenger_name,
                             b.pickup_date,
                             b.province,
+                            b.resort,
                             b.vehicle_type,
                             b.pax_total,
                             b.synced_at,
@@ -181,9 +182,9 @@ try {
                     'passenger' => $job['passenger_name'] ?? '-',
                     'pickup_date' => $job['pickup_date'],
                     'province' => $job['province'] ?? '-',
+                    'resort' => $job['resort'] ?? '-',
                     'vehicle' => $job['vehicle_type'],
                     'pax' => (int)$job['pax_total'],
-                    'accommodation' => $job['accommodation_name'] ?? '-',
                     'urgency' => $job['urgency_level']
                 ];
             }, $criticalJobs),
@@ -194,6 +195,7 @@ try {
                     'passenger' => $booking['passenger_name'] ?? '-',
                     'pickup_date' => $booking['pickup_date'],
                     'province' => $booking['province'] ?? '-',
+                    'resort' => $booking['resort'] ?? '-',
                     'vehicle' => $booking['vehicle_type'],
                     'pax' => (int)$booking['pax_total'],
                     'synced_at' => $booking['synced_at'],

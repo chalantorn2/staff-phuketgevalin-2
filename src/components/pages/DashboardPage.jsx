@@ -272,6 +272,9 @@ function DashboardPage() {
                       Province
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Resort
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
                       Vehicle
                     </th>
                   </tr>
@@ -309,6 +312,9 @@ function DashboardPage() {
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {job.province}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {job.resort}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {job.vehicle}
@@ -382,6 +388,9 @@ function DashboardPage() {
                       Province
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Resort
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
                       Synced At
                     </th>
                   </tr>
@@ -417,6 +426,9 @@ function DashboardPage() {
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {booking.province}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {booking.resort}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {formatDateTime(booking.synced_at)}

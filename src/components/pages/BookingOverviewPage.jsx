@@ -359,7 +359,7 @@ function BookingOverviewPage() {
         if (visibleColumns.flightNumber) row.push(booking.flight_number || "");
         if (visibleColumns.vehicle) row.push(booking.vehicle_type || "");
         if (visibleColumns.province) row.push(booking.province || "");
-        if (visibleColumns.resort) row.push(booking.resort || booking.accommodation_name || "");
+        if (visibleColumns.resort) row.push(booking.resort || "");
         if (visibleColumns.driver) row.push(booking.driver_name || "");
         if (visibleColumns.vehicleNumber)
           row.push(booking.vehicle_number || "");
@@ -484,7 +484,7 @@ function BookingOverviewPage() {
           cells.push(vehicleType);
         }
         if (visibleColumns.province) cells.push(booking.province || "Unknown");
-        if (visibleColumns.resort) cells.push(booking.resort || booking.accommodation_name || "-");
+        if (visibleColumns.resort) cells.push(booking.resort || "-");
         if (visibleColumns.driver) cells.push(booking.driver_name || "-");
         if (visibleColumns.vehicleNumber)
           cells.push(booking.vehicle_number || "-");
@@ -1083,7 +1083,7 @@ function BookingOverviewPage() {
                       )}
                       {visibleColumns.resort && (
                         <td className="py-3 px-4 text-sm text-gray-600">
-                          {booking.resort || booking.accommodation_name || "-"}
+                          {booking.resort || "-"}
                         </td>
                       )}
                       {visibleColumns.driver && (

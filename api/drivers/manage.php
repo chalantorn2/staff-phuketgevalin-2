@@ -73,8 +73,9 @@
     function handleGetDrivers($pdo)
     {
         $sql = "SELECT d.*, v.registration as default_vehicle_registration, v.brand as default_vehicle_brand, v.model as default_vehicle_model
-                FROM drivers d 
+                FROM drivers d
                 LEFT JOIN vehicles v ON d.id = v.default_driver_id
+                WHERE d.status = 'active'
                 ORDER BY d.created_at DESC";
 
         $stmt = $pdo->prepare($sql);
@@ -127,15 +128,6 @@
         // Validate phone format (Thai mobile format)
         if (!preg_match('/^\+66[6-9]\d{8}$/', $phoneNumber)) {
             sendResponse(false, null, 'Phone number must be Thai mobile format (+66812345678)', 400);
-        }
-
-        // Check if phone number exists
-        $checkSql = "SELECT id FROM drivers WHERE phone_number = :phone";
-        $checkStmt = $pdo->prepare($checkSql);
-        $checkStmt->execute([':phone' => $phoneNumber]);
-
-        if ($checkStmt->fetch()) {
-            sendResponse(false, null, 'Phone number already exists', 400);
         }
 
         // Check if username exists (only if username is provided)
@@ -258,15 +250,6 @@
             sendResponse(false, null, 'Phone number must be Thai mobile format (+66812345678)', 400);
         }
 
-        // Check if phone number exists for other drivers
-        $checkSql = "SELECT id FROM drivers WHERE phone_number = :phone AND id != :id";
-        $checkStmt = $pdo->prepare($checkSql);
-        $checkStmt->execute([':phone' => $phoneNumber, ':id' => $driverId]);
-
-        if ($checkStmt->fetch()) {
-            sendResponse(false, null, 'Phone number already exists', 400);
-        }
-
         // Check if username exists for other drivers (only if username is provided)
         if (!empty($username)) {
             $checkUsernameSql = "SELECT id FROM drivers WHERE username = :username AND id != :id";
@@ -336,17 +319,8 @@
             sendResponse(false, null, 'Driver ID is required', 400);
         }
 
-        // Check if driver has active assignments
-        $checkSql = "SELECT COUNT(*) as count FROM driver_vehicle_assignments WHERE driver_id = :id AND status IN ('assigned', 'in_progress')";
-        $checkStmt = $pdo->prepare($checkSql);
-        $checkStmt->execute([':id' => $driverId]);
-        $activeAssignments = $checkStmt->fetch()['count'];
-
-        if ($activeAssignments > 0) {
-            sendResponse(false, null, 'Cannot delete driver with active assignments', 400);
-        }
-
-        $sql = "DELETE FROM drivers WHERE id = :id";
+        // Soft delete: Change status to 'inactive' and clear code/username for reuse
+        $sql = "UPDATE drivers SET status = 'inactive', code = NULL, username = NULL, updated_at = NOW() WHERE id = :id";
         $stmt = $pdo->prepare($sql);
         $result = $stmt->execute([':id' => $driverId]);
 

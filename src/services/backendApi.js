@@ -444,6 +444,29 @@ export const backendApi = {
       }
     },
 
+    // Get booking by reference (Test API - GET /bookings/{bookingRef})
+    async getBookingByRefTest(bookingRef) {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/sync/get-booking-test.php?booking_ref=${encodeURIComponent(
+            bookingRef
+          )}`
+        );
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(
+            data.error || "Failed to get booking from Test API"
+          );
+        }
+
+        return { success: true, data: data.data };
+      } catch (error) {
+        console.error("Holiday Taxis Test Get Booking API Error:", error);
+        return { success: false, error: error.message };
+      }
+    },
+
     // Get booking notes
     async getBookingNotes(bookingRef) {
       try {

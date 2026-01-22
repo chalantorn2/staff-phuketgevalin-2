@@ -156,25 +156,60 @@ function handleUpdateUser($pdo, $userId, $data)
         sendResponse(false, null, 'User ID is required', 400);
     }
 
+    $username = trim($data['username'] ?? '');
+    $password = $data['password'] ?? '';
     $full_name = trim($data['full_name'] ?? '');
     $role = $data['role'] ?? 'user';
     $status = $data['status'] ?? 'active';
 
-    if (empty($full_name)) {
-        sendResponse(false, null, 'Full name is required', 400);
+    if (empty($username) || empty($full_name)) {
+        sendResponse(false, null, 'Username and full name are required', 400);
     }
 
-    $sql = "UPDATE staff_users 
-            SET full_name = :full_name, role = :role, status = :status, updated_at = NOW() 
-            WHERE id = :id";
+    // Check if username is being changed and if new username already exists
+    $checkSql = "SELECT id FROM staff_users WHERE username = :username AND id != :id";
+    $checkStmt = $pdo->prepare($checkSql);
+    $checkStmt->execute([':username' => $username, ':id' => $userId]);
+
+    if ($checkStmt->fetch()) {
+        sendResponse(false, null, 'Username already exists', 400);
+    }
+
+    // Build update query dynamically based on whether password is provided
+    if (!empty($password)) {
+        // Update with password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $sql = "UPDATE staff_users
+                SET username = :username, password = :password, full_name = :full_name,
+                    role = :role, status = :status, updated_at = NOW()
+                WHERE id = :id";
+
+        $params = [
+            ':id' => $userId,
+            ':username' => $username,
+            ':password' => $hashedPassword,
+            ':full_name' => $full_name,
+            ':role' => $role,
+            ':status' => $status
+        ];
+    } else {
+        // Update without password
+        $sql = "UPDATE staff_users
+                SET username = :username, full_name = :full_name,
+                    role = :role, status = :status, updated_at = NOW()
+                WHERE id = :id";
+
+        $params = [
+            ':id' => $userId,
+            ':username' => $username,
+            ':full_name' => $full_name,
+            ':role' => $role,
+            ':status' => $status
+        ];
+    }
 
     $stmt = $pdo->prepare($sql);
-    $result = $stmt->execute([
-        ':id' => $userId,
-        ':full_name' => $full_name,
-        ':role' => $role,
-        ':status' => $status
-    ]);
+    $result = $stmt->execute($params);
 
     if ($result) {
         sendResponse(true, null, 'User updated successfully');

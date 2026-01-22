@@ -1,0 +1,6 @@
+/* Tailwind CSS Standalone Configuration */
+@import "tailwindcss";
+
+/* Source files to scan for Tailwind classes */
+@source "public/track.html";
+@source "api-testing/index.html";

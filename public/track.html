@@ -4,25 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Driver Tracking - Phuket Gevalin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/tailwind.min.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <style>
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.5;
-        }
-      }
-      .animate-pulse-custom {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      }
-    </style>
   </head>
   <body class="bg-gradient-to-br from-cyan-50 to-cyan-50 min-h-screen">
     <div id="app" class="p-4">
@@ -199,21 +185,64 @@
             เริ่มงาน
           </button>
 
-          <button
-            id="btn-complete"
-            class="hidden w-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-cyan-600 hover:to-cyan-700 transition-all"
-          >
-            <i class="fas fa-check-circle mr-2"></i>
-            เสร็จสิ้นงาน
-          </button>
+          <!-- Before Pickup Buttons (กำลังไปรับ) -->
+          <div id="before-pickup-buttons" class="hidden space-y-3">
+            <button
+              id="btn-waiting"
+              class="w-full text-white py-4 rounded-xl font-semibold text-lg shadow-lg transition-all"
+              style="background: linear-gradient(to right, rgb(234 179 8), rgb(202 138 4));"
+            >
+              <i class="fas fa-map-marker-alt mr-2"></i>
+              ถึงจุดรับแล้ว
+            </button>
 
-          <button
-            id="btn-no-show"
-            class="hidden w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
-          >
-            <i class="fas fa-user-times mr-2"></i>
-            ไม่เจอลูกค้า (No Show)
-          </button>
+            <button
+              id="btn-no-show-1"
+              class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+            >
+              <i class="fas fa-user-times mr-2"></i>
+              ไม่เจอลูกค้า (No Show)
+            </button>
+          </div>
+
+          <!-- Waiting for Customer Buttons (รอลูกค้า) -->
+          <div id="waiting-buttons" class="hidden space-y-3">
+            <button
+              id="btn-after-pickup"
+              class="w-full text-white py-4 rounded-xl font-semibold text-lg shadow-lg transition-all"
+              style="background: linear-gradient(to right, rgb(59 130 246), rgb(37 99 235));"
+            >
+              <i class="fas fa-user-check mr-2"></i>
+              ลูกค้าขึ้นรถแล้ว
+            </button>
+
+            <button
+              id="btn-no-show-2"
+              class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+            >
+              <i class="fas fa-user-times mr-2"></i>
+              ไม่เจอลูกค้า (No Show)
+            </button>
+          </div>
+
+          <!-- After Pickup Buttons (กำลังส่ง) -->
+          <div id="after-pickup-buttons" class="hidden space-y-3">
+            <button
+              id="btn-complete"
+              class="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-cyan-600 hover:to-cyan-700 transition-all"
+            >
+              <i class="fas fa-check-circle mr-2"></i>
+              เสร็จสิ้นงาน
+            </button>
+
+            <button
+              id="btn-no-show-3"
+              class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+            >
+              <i class="fas fa-user-times mr-2"></i>
+              ไม่เจอลูกค้า (No Show)
+            </button>
+          </div>
 
           <div
             id="completed-state"
@@ -255,6 +284,7 @@
 
       let trackingInfo = null;
       let currentStatus = "idle";
+      let jobStatus = "BEFORE_PICKUP"; // Track actual job status for Holiday Taxis
       let trackingInterval = null;
       let currentLocation = null;
       let canStartTracking = false;
@@ -290,8 +320,15 @@
         gpsLng: document.getElementById("gps-lng"),
         gpsInterval: document.getElementById("gps-interval"),
         btnStart: document.getElementById("btn-start"),
+        beforePickupButtons: document.getElementById("before-pickup-buttons"),
+        waitingButtons: document.getElementById("waiting-buttons"),
+        afterPickupButtons: document.getElementById("after-pickup-buttons"),
+        btnWaiting: document.getElementById("btn-waiting"),
+        btnAfterPickup: document.getElementById("btn-after-pickup"),
         btnComplete: document.getElementById("btn-complete"),
-        btnNoShow: document.getElementById("btn-no-show"),
+        btnNoShow1: document.getElementById("btn-no-show-1"),
+        btnNoShow2: document.getElementById("btn-no-show-2"),
+        btnNoShow3: document.getElementById("btn-no-show-3"),
         completedState: document.getElementById("completed-state"),
         completedTime: document.getElementById("completed-time"),
         noShowState: document.getElementById("no-show-state"),
@@ -337,8 +374,8 @@
         els.passengerName.textContent = trackingInfo.booking.passenger_name;
         els.passengerPhone.textContent = trackingInfo.booking.passenger_phone;
 
-        // Show resort/hotel if available
-        const resort = trackingInfo.booking.resort || trackingInfo.booking.accommodation_name;
+        // Show resort if available (only resort field, not accommodation_name)
+        const resort = trackingInfo.booking.resort;
         if (resort) {
           els.resortContainer.classList.remove("hidden");
           els.resortName.textContent = resort;
@@ -378,6 +415,11 @@
           els.assignmentNotesContent.textContent =
             trackingInfo.assignment_notes;
           els.assignmentNotes.classList.remove("hidden");
+        }
+
+        // Restore jobStatus from database
+        if (trackingInfo.tracking && trackingInfo.tracking.current_job_status) {
+          jobStatus = trackingInfo.tracking.current_job_status;
         }
 
         // Check if assignment is already completed
@@ -452,37 +494,48 @@
       }
 
       function updateUI() {
+        // Hide all button groups first
+        els.btnStart.classList.add("hidden");
+        els.beforePickupButtons.classList.add("hidden");
+        els.waitingButtons.classList.add("hidden");
+        els.afterPickupButtons.classList.add("hidden");
+        els.completedState.classList.add("hidden");
+        els.noShowState.classList.add("hidden");
+        els.gpsStatus.classList.add("hidden");
+
         if (currentStatus === "idle") {
+          // Before starting - show start button
           els.statusBadge.textContent = "รอเริ่มงาน";
           els.statusBadge.className =
             "px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800";
           els.btnStart.classList.remove("hidden");
           els.btnStart.disabled = !canStartTracking;
-          els.btnComplete.classList.add("hidden");
-          els.btnNoShow.classList.add("hidden");
-          els.completedState.classList.add("hidden");
-          els.noShowState.classList.add("hidden");
-          els.gpsStatus.classList.add("hidden");
         } else if (currentStatus === "tracking") {
-          els.statusBadge.textContent = "🔴 กำลังทำงาน";
-          els.statusBadge.className =
-            "px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-pulse-custom";
-          els.btnStart.classList.add("hidden");
-          els.btnComplete.classList.remove("hidden");
-          els.btnNoShow.classList.remove("hidden");
-          els.completedState.classList.add("hidden");
-          els.noShowState.classList.add("hidden");
+          // Show GPS status
           els.gpsStatus.classList.remove("hidden");
+
+          // Show buttons based on jobStatus
+          if (jobStatus === "BEFORE_PICKUP") {
+            els.statusBadge.textContent = "🔴 กำลังไปรับ";
+            els.statusBadge.className =
+              "px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 animate-pulse-custom";
+            els.beforePickupButtons.classList.remove("hidden");
+          } else if (jobStatus === "WAITING_FOR_CUSTOMER") {
+            els.statusBadge.textContent = "🟡 รอลูกค้า";
+            els.statusBadge.className =
+              "px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 animate-pulse-custom";
+            els.waitingButtons.classList.remove("hidden");
+          } else if (jobStatus === "AFTER_PICKUP") {
+            els.statusBadge.textContent = "🔵 กำลังส่ง";
+            els.statusBadge.className =
+              "px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 animate-pulse-custom";
+            els.afterPickupButtons.classList.remove("hidden");
+          }
         } else if (currentStatus === "completed") {
           els.statusBadge.textContent = "✅ เสร็จสิ้น";
           els.statusBadge.className =
             "px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800";
-          els.btnStart.classList.add("hidden");
-          els.btnComplete.classList.add("hidden");
-          els.btnNoShow.classList.add("hidden");
           els.completedState.classList.remove("hidden");
-          els.noShowState.classList.add("hidden");
-          els.gpsStatus.classList.add("hidden");
 
           // Show completed time if available
           if (trackingInfo?.tracking?.completed_at) {
@@ -494,12 +547,7 @@
           els.statusBadge.textContent = "❌ No Show";
           els.statusBadge.className =
             "px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800";
-          els.btnStart.classList.add("hidden");
-          els.btnComplete.classList.add("hidden");
-          els.btnNoShow.classList.add("hidden");
-          els.completedState.classList.add("hidden");
           els.noShowState.classList.remove("hidden");
-          els.gpsStatus.classList.add("hidden");
 
           // Show no-show time
           els.noShowTime.textContent =
@@ -535,10 +583,11 @@
 
               if (data.success) {
                 currentStatus = "tracking";
+                jobStatus = "BEFORE_PICKUP";
                 updateUI();
                 await sendLocation(position);
                 startTracking();
-                alert("✅ เริ่มงานสำเร็จ! GPS กำลังส่งตำแหน่ง");
+                alert("✅ เริ่มงานสำเร็จ! กำลังไปรับลูกค้า");
               } else {
                 alert("❌ ไม่สามารถเริ่มงานได้: " + data.error);
               }
@@ -578,7 +627,7 @@
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
-          status: "BEFORE_PICKUP",
+          status: jobStatus, // Send current job status with every location update
         };
 
         currentLocation = location;
@@ -598,6 +647,30 @@
       function updateGPSDisplay(location) {
         els.gpsLat.textContent = `📍 Lat: ${location.latitude.toFixed(6)}`;
         els.gpsLng.textContent = `📍 Lng: ${location.longitude.toFixed(6)}`;
+      }
+
+      async function waitingForCustomer() {
+        if (!confirm("ยืนยันว่าถึงจุดรับแล้ว?")) return;
+
+        jobStatus = "WAITING_FOR_CUSTOMER";
+        updateUI();
+
+        // Send location immediately with new status
+        sendLocationUpdate();
+
+        alert("✅ อัพเดทสถานะเป็น 'รอลูกค้า' แล้ว");
+      }
+
+      async function afterPickup() {
+        if (!confirm("ยืนยันว่าลูกค้าขึ้นรถแล้ว?")) return;
+
+        jobStatus = "AFTER_PICKUP";
+        updateUI();
+
+        // Send location immediately with new status
+        sendLocationUpdate();
+
+        alert("✅ อัพเดทสถานะเป็น 'กำลังส่ง' แล้ว");
       }
 
       async function completeJob(
@@ -677,6 +750,8 @@
 
       // Event listeners
       els.btnStart.addEventListener("click", startJob);
+      els.btnWaiting.addEventListener("click", waitingForCustomer);
+      els.btnAfterPickup.addEventListener("click", afterPickup);
       els.btnComplete.addEventListener("click", () => {
         completeJob(
           "COMPLETED",
@@ -684,7 +759,21 @@
           "✅ งานเสร็จสมบูรณ์!"
         );
       });
-      els.btnNoShow.addEventListener("click", () => {
+      els.btnNoShow1.addEventListener("click", () => {
+        completeJob(
+          "NO_SHOW",
+          "❌ ยืนยันว่าไม่เจอลูกค้าใช่หรือไม่?\n\nระบบจะแจ้ง Holiday Taxis ว่าลูกค้าไม่มา (No Show)",
+          "✅ แจ้ง No Show สำเร็จ!"
+        );
+      });
+      els.btnNoShow2.addEventListener("click", () => {
+        completeJob(
+          "NO_SHOW",
+          "❌ ยืนยันว่าไม่เจอลูกค้าใช่หรือไม่?\n\nระบบจะแจ้ง Holiday Taxis ว่าลูกค้าไม่มา (No Show)",
+          "✅ แจ้ง No Show สำเร็จ!"
+        );
+      });
+      els.btnNoShow3.addEventListener("click", () => {
         completeJob(
           "NO_SHOW",
           "❌ ยืนยันว่าไม่เจอลูกค้าใช่หรือไม่?\n\nระบบจะแจ้ง Holiday Taxis ว่าลูกค้าไม่มา (No Show)",

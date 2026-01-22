@@ -1,0 +1,154 @@
+Subject: Re: Driver Event API - Request/Response Logs
+
+Dear Holiday Taxis Team,
+
+Thank you for your email regarding the Driver Event API integration.
+
+We have tested the API and compiled the complete request/response logs as requested. Here are our findings:
+
+─────────────────────────────────────────────────────────────────
+TESTING RESULTS
+─────────────────────────────────────────────────────────────────
+
+✅ PRODUCTION BOOKINGS: Working Successfully
+   Example: HBEDS-25077304
+   - All location updates successful (HTTP 200)
+   - Response: {"status":"OK","warnings":[]}
+
+❌ ALL TEST BOOKINGS: Returning Errors
+   Example: BAHOL-26777988 (and all other test bookings you provided)
+   - All location updates failed (HTTP 400)
+   - Error: {"errors":{"bookingref":"Invalid Booking Reference"},"warnings":[]}
+
+─────────────────────────────────────────────────────────────────
+ENVIRONMENT & IMPLEMENTATION DETAILS
+─────────────────────────────────────────────────────────────────
+
+Environment: PRODUCTION
+API Endpoint: https://suppliers.holidaytaxis.com
+API Version: 2025-01
+API Key: htscon_b6fede289eec88ec1a481ebdb689347e8d9353bafc037e74de7ffd2f1cf86a0f2ee5c0fd8d337304
+
+─────────────────────────────────────────────────────────────────
+SAMPLE REQUEST/RESPONSE LOGS
+─────────────────────────────────────────────────────────────────
+
+FAILED REQUEST (Test Booking: BAHOL-26777988)
+
+POST https://suppliers.holidaytaxis.com/bookings/BAHOL-26777988/vehicles/99999/location
+
+Headers:
+  API_KEY: htscon_b6fede289eec88ec1a481ebdb689347e8d9353bafc037e74de7ffd2f1cf86a0f2ee5c0fd8d337304
+  Content-Type: application/json
+  Accept: application/json
+  VERSION: 2025-01
+
+Request Body:
+{
+  "timestamp": "2025-11-18T14:04:04+00:00",
+  "location": {
+    "lat": 8.0693262,
+    "lng": 98.9135073
+  },
+  "status": "BEFORE_PICKUP"
+}
+
+Response:
+HTTP 400 Bad Request
+{
+  "errors": {
+    "bookingref": "Invalid Booking Reference"
+  },
+  "warnings": []
+}
+
+Timestamp: 2025-11-18 14:04:04 UTC
+
+─────────────────────────────────────────────────────────────────
+
+SUCCESSFUL REQUEST (Production Booking: HBEDS-25077304)
+
+POST https://suppliers.holidaytaxis.com/bookings/HBEDS-25077304/vehicles/316712/location
+
+Headers:
+  API_KEY: htscon_b6fede289eec88ec1a481ebdb689347e8d9353bafc037e74de7ffd2f1cf86a0f2ee5c0fd8d337304
+  Content-Type: application/json
+  Accept: application/json
+  VERSION: 2025-01
+
+Request Body:
+{
+  "timestamp": "2025-11-18T14:04:24+00:00",
+  "location": {
+    "lat": 8.0693262,
+    "lng": 98.9135073
+  },
+  "status": "BEFORE_PICKUP"
+}
+
+Response:
+HTTP 200 OK
+{
+  "status": "OK",
+  "warnings": []
+}
+
+Timestamp: 2025-11-18 14:04:24 UTC
+
+─────────────────────────────────────────────────────────────────
+SUMMARY
+─────────────────────────────────────────────────────────────────
+
+Our implementation follows your API documentation correctly and works perfectly with production bookings. However, ALL test bookings you provided are returning "Invalid Booking Reference" errors.
+
+Could you please verify if these test bookings are still active in your system? We are ready to proceed with production use, but would appreciate working test data for QA purposes.
+
+Please let us know if you need any additional information.
+
+Best regards,
+[Your Name]
+Phuket Gevalin Transport Services
+
+═══════════════════════════════════════════════════════════════════
+THAI TRANSLATION / แปลภาษาไทย
+═══════════════════════════════════════════════════════════════════
+
+เรื่อง: ตอบกลับ: Driver Event API - Request/Response Logs
+
+เรียน ทีมงาน Holiday Taxis
+
+ขอบคุณสำหรับอีเมลเกี่ยวกับการ integrate Driver Event API
+
+เราได้ทดสอบ API และรวบรวม request/response logs ตามที่ขอมาแล้ว ผลการทดสอบมีดังนี้:
+
+─────────────────────────────────────────────────────────────────
+ผลการทดสอบ
+─────────────────────────────────────────────────────────────────
+
+✅ BOOKING จริง (PRODUCTION): ทำงานสำเร็จ
+   ตัวอย่าง: HBEDS-25077304
+   - ส่ง location updates สำเร็จทั้งหมด (HTTP 200)
+   - ได้ response: {"status":"OK","warnings":[]}
+
+❌ BOOKING ทดสอบ (TEST): Error ทั้งหมด
+   ตัวอย่าง: BAHOL-26777988 (และ booking ทดสอบอื่นๆ ที่ส่งมาให้)
+   - ส่ง location updates ล้มเหลวทั้งหมด (HTTP 400)
+   - Error: {"errors":{"bookingref":"Invalid Booking Reference"},"warnings":[]}
+
+─────────────────────────────────────────────────────────────────
+สรุป
+─────────────────────────────────────────────────────────────────
+
+การ implement ของเราเป็นไปตาม API documentation ของคุณอย่างถูกต้อง
+และทำงานได้ดีกับ booking จริง (production) แต่ booking ทดสอบ
+ที่คุณส่งมาให้ทั้งหมดได้ error "Invalid Booking Reference"
+
+ช่วยตรวจสอบให้หน่อยได้ไหมว่า booking ทดสอบเหล่านี้ยังใช้งานได้อยู่
+ในระบบของคุณหรือไม่? เราพร้อมใช้งานจริง (production) ได้แล้ว
+แต่อยากมีข้อมูลทดสอบที่ใช้งานได้สำหรับการ QA
+
+หากต้องการข้อมูลเพิ่มเติม กรุณาแจ้งให้ทราบ
+
+ขอแสดงความนับถือ
+[ชื่อของคุณ]
+Phuket Gevalin Transport Services

@@ -46,6 +46,20 @@ try {
     $stmt->execute([':token' => $token]);
     $tokenData = $stmt->fetch();
 
+    // Get the latest tracking status from location logs
+    $currentJobStatus = 'BEFORE_PICKUP'; // Default
+    if ($tokenData) {
+        $statusSql = "SELECT tracking_status FROM driver_location_logs
+                      WHERE token_id = :token_id
+                      ORDER BY tracked_at DESC LIMIT 1";
+        $statusStmt = $pdo->prepare($statusSql);
+        $statusStmt->execute([':token_id' => $tokenData['id']]);
+        $latestStatus = $statusStmt->fetch();
+        if ($latestStatus && !empty($latestStatus['tracking_status'])) {
+            $currentJobStatus = $latestStatus['tracking_status'];
+        }
+    }
+
     if (!$tokenData) {
         http_response_code(404);
         echo json_encode([
@@ -74,14 +88,16 @@ try {
     $dropoffLocation = '-';
     $pickupDateTime = '';
 
-    if (strpos($bookingType, 'arrival') !== false || $tokenData['arrival_date']) {
-        // Arrival transfer: Airport -> Accommodation
+    // Priority: booking_type first, then dates (to prevent swapping for bookings with both dates)
+    // Keywords from Holiday Taxis API: "outbound" = Arrival, "return" = Departure
+    if (strpos($bookingType, 'outbound') !== false) {
+        // Arrival transfer (Single outbound only): Airport -> Accommodation
         $pickupLocation = $airport ?: 'Airport';
         $dropoffLocation = $accommodation ?: 'Resort/Hotel';
         // Use adjusted time if available
         $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['arrival_date'] ?? $tokenData['pickup_date'] ?? '';
-    } elseif (strpos($bookingType, 'departure') !== false || $tokenData['departure_date']) {
-        // Departure transfer: Accommodation -> Airport
+    } elseif (strpos($bookingType, 'return') !== false) {
+        // Departure transfer (Single return only): Accommodation -> Airport
         $pickupLocation = $accommodation ?: 'Resort/Hotel';
         $dropoffLocation = $airport ?: 'Airport';
         // Use adjusted time if available
@@ -94,7 +110,7 @@ try {
         // If Quote addresses not available, try to determine from dates
         if (empty($pickupLocation) && empty($dropoffLocation)) {
             // If arrival_date exists, treat as arrival (Airport -> Accommodation)
-            if (!empty($tokenData['arrival_date'])) {
+            if (!empty($tokenData['arrival_date']) && empty($tokenData['departure_date'])) {
                 $pickupLocation = $airport ?: 'Airport';
                 $dropoffLocation = $accommodation ?: 'Resort/Hotel';
                 $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['arrival_date'] ?? $tokenData['pickup_date'] ?? '';
@@ -131,20 +147,33 @@ try {
         if (empty($pickupLocation)) $pickupLocation = '-';
         if (empty($dropoffLocation)) $dropoffLocation = '-';
     } else {
-        // Default: Use available location data
-        if (!empty($accommodation) && !empty($airport)) {
-            // If both exist, default to departure direction
-            $pickupLocation = $accommodation;
-            $dropoffLocation = $airport;
-        } elseif (!empty($accommodation)) {
-            $pickupLocation = $accommodation;
-            $dropoffLocation = 'Destination';
-        } elseif (!empty($airport)) {
-            $pickupLocation = $airport;
-            $dropoffLocation = 'Destination';
+        // No clear booking_type: Use dates to determine direction
+        if (!empty($tokenData['arrival_date']) && empty($tokenData['departure_date'])) {
+            // Only arrival_date: Airport -> Accommodation
+            $pickupLocation = $airport ?: 'Airport';
+            $dropoffLocation = $accommodation ?: 'Resort/Hotel';
+            $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['arrival_date'] ?? $tokenData['pickup_date'] ?? '';
+        } elseif (!empty($tokenData['departure_date'])) {
+            // Has departure_date: Accommodation -> Airport
+            $pickupLocation = $accommodation ?: 'Resort/Hotel';
+            $dropoffLocation = $airport ?: 'Airport';
+            $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['pickup_date'] ?? $tokenData['departure_date'] ?? '';
+        } else {
+            // Default: Use available location data
+            if (!empty($accommodation) && !empty($airport)) {
+                // If both exist, default to departure direction
+                $pickupLocation = $accommodation;
+                $dropoffLocation = $airport;
+            } elseif (!empty($accommodation)) {
+                $pickupLocation = $accommodation;
+                $dropoffLocation = 'Destination';
+            } elseif (!empty($airport)) {
+                $pickupLocation = $airport;
+                $dropoffLocation = 'Destination';
+            }
+            // Use adjusted time if available
+            $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['pickup_date'] ?? '';
         }
-        // Use adjusted time if available
-        $pickupDateTime = $tokenData['pickup_date_adjusted'] ?? $tokenData['pickup_date'] ?? '';
     }
 
     // Determine the primary pickup date for validation (use adjusted if available)
@@ -166,8 +195,6 @@ try {
             'booking' => [
                 'passenger_name' => $tokenData['passenger_name'] ?? '-',
                 'passenger_phone' => $tokenData['passenger_phone'] ?? '-',
-                'resort' => $tokenData['resort'] ?? null,
-                'accommodation_name' => $tokenData['accommodation_name'] ?? null,
                 'pickup_location' => $pickupLocation,
                 'dropoff_location' => $dropoffLocation,
                 'pickup_datetime' => $pickupDateTime ? date('d/m/Y H:i', strtotime($pickupDateTime)) : '-',
@@ -194,7 +221,8 @@ try {
                 'interval' => (int)$tokenData['tracking_interval'],
                 'started_at' => $tokenData['started_at'],
                 'completed_at' => $tokenData['completed_at'],
-                'total_locations_sent' => (int)$tokenData['total_locations_sent']
+                'total_locations_sent' => (int)$tokenData['total_locations_sent'],
+                'current_job_status' => $currentJobStatus
             ],
 
             'expires_at' => $tokenData['expires_at']

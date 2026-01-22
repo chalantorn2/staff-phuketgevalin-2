@@ -703,7 +703,15 @@ function BookingManagementPage() {
     };
 
     fetchResorts();
-  }, [filters.bookingStatus, filters.assignmentStatus, filters.bookingType, filters.dateFrom, filters.dateTo, filters.search, filters.province]);
+  }, [
+    filters.bookingStatus,
+    filters.assignmentStatus,
+    filters.bookingType,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.search,
+    filters.province,
+  ]);
 
   // Filter resorts based on search term
   const filteredResorts = useMemo(() => {
@@ -905,7 +913,9 @@ function BookingManagementPage() {
                         }`}
                       >
                         <span>{resort.name}</span>
-                        <span className="text-xs text-gray-500 ml-2">{resort.count}</span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          {resort.count}
+                        </span>
                       </div>
                     ))}
                     {filteredResorts.length > 50 && (
@@ -1300,7 +1310,7 @@ function BookingManagementPage() {
                         return {
                           label: "Departure",
                           icon: "fa-plane-departure",
-                          color: "text-blue-600",
+                          color: "text-red-600",
                         };
                       } else if (lowerType.includes("point")) {
                         return {
@@ -1331,7 +1341,7 @@ function BookingManagementPage() {
                       return {
                         label: "Departure",
                         icon: "fa-plane-departure",
-                        color: "text-blue-600",
+                        color: "text-red-600",
                       };
                     } else if (!hasArrivalDate && !hasDepartureDate) {
                       // If no arrival/departure date, likely Point to Point

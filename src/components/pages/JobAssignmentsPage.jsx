@@ -14,6 +14,7 @@ import * as XLSX from "xlsx";
 import { Clock, UserCog, MapPin } from "lucide-react";
 import ChangeTimeModal from "../modals/ChangeTimeModal";
 import EditDriverModal from "../modals/EditDriverModal";
+import ChangeTrackingStatusModal from "../modals/ChangeTrackingStatusModal";
 
 function JobAssignmentsPage() {
   const { setSelectedBookingRef, setCurrentPage: setAppPage } =
@@ -81,6 +82,10 @@ function JobAssignmentsPage() {
   // Edit Driver Modal states
   const [showEditDriverModal, setShowEditDriverModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
+
+  // Change Tracking Status Modal states
+  const [showChangeStatusModal, setShowChangeStatusModal] = useState(false);
+  const [statusChangeAssignment, setStatusChangeAssignment] = useState(null);
 
   // Send Jobs Modal states
   const [showSendModal, setShowSendModal] = useState(false);
@@ -346,7 +351,7 @@ function JobAssignmentsPage() {
         Vehicle: "",
         Route: "",
         "Pickup Time": "",
-        Province: "",
+        Resort: "",
       });
 
       // Add assignments for this date
@@ -369,7 +374,7 @@ function JobAssignmentsPage() {
           Vehicle: assignment.vehicle.registration,
           Route: `${assignment.booking.pickup_location} → ${assignment.booking.dropoff_location}`,
           "Pickup Time": pickupTime,
-          Province: assignment.booking.province || "Unknown",
+          Resort: assignment.booking.resort || assignment.booking.accommodation?.name || "Unknown",
         });
       });
 
@@ -382,7 +387,7 @@ function JobAssignmentsPage() {
         Vehicle: "",
         Route: "",
         "Pickup Time": "",
-        Province: "",
+        Resort: "",
       });
     });
 
@@ -398,7 +403,7 @@ function JobAssignmentsPage() {
       { wch: 12 }, // Vehicle
       { wch: 40 }, // Route
       { wch: 12 }, // Pickup Time
-      { wch: 15 }, // Province
+      { wch: 25 }, // Resort
     ];
 
     const wb = XLSX.utils.book_new();
@@ -477,7 +482,7 @@ function JobAssignmentsPage() {
             } pax</span>
           </td>
           <td style="padding: 5px; border: 1px solid #ccc; font-size: 9pt;">${
-            assignment.booking.province || "Unknown"
+            assignment.booking.resort || assignment.booking.accommodation?.name || "Unknown"
           }</td>
           <td style="padding: 5px; border: 1px solid #ccc; font-size: 9pt;">${
             assignment.driver.name
@@ -548,10 +553,10 @@ function JobAssignmentsPage() {
              ============================================ */
           col:nth-child(1) { width: 8%; }  /* Booking Ref */
           col:nth-child(2) { width: 14%; } /* Passenger */
-          col:nth-child(3) { width: 7%; }  /* Province */
+          col:nth-child(3) { width: 12%; }  /* Resort */
           col:nth-child(4) { width: 11%; } /* Driver */
           col:nth-child(5) { width: 9%; }  /* Vehicle */
-          col:nth-child(6) { width: 32%; } /* Route */
+          col:nth-child(6) { width: 27%; } /* Route */
           col:nth-child(7) { width: 9%; } /* Flight */
           col:nth-child(8) { width: 10%; } /* Pickup Date/Time */
         </style>
@@ -566,7 +571,7 @@ function JobAssignmentsPage() {
             <tr>
               <th>Booking Ref</th>
               <th>Passenger</th>
-              <th>Province</th>
+              <th>Resort</th>
               <th>Driver</th>
               <th>Vehicle</th>
               <th>Route</th>
@@ -892,6 +897,14 @@ function JobAssignmentsPage() {
       message += `👥 ${assignment.booking.passenger_name || "ไม่ระบุ"} (${
         assignment.booking.pax
       } คน)\n`;
+
+      // Add resort if available (only resort field, not accommodation_name)
+      const resort = assignment.booking.resort;
+      console.log(`Booking ${assignment.booking_ref} - resort:`, resort); // Debug log
+      if (resort) {
+        message += `🏨 โซน: ${resort}\n`;
+      }
+
       message += `🔖 ${assignment.booking_ref}\n`;
       message += `\n`;
 
@@ -1375,9 +1388,9 @@ function JobAssignmentsPage() {
                   )}
                   <th
                     className="text-left py-2 px-2 font-medium text-gray-700 text-sm"
-                    style={{ width: "7%" }}
+                    style={{ width: "12%" }}
                   >
-                    Province
+                    Resort
                   </th>
                   <th
                     className="text-left py-2 px-2 font-medium text-gray-700 text-sm"
@@ -1514,19 +1527,33 @@ function JobAssignmentsPage() {
                               assignment.tracking.is_expired
                             ) {
                               return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                <button
+                                  onClick={() => {
+                                    setStatusChangeAssignment(assignment);
+                                    setShowChangeStatusModal(true);
+                                  }}
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 hover:bg-orange-200 transition-colors cursor-pointer"
+                                  title="Click to change status"
+                                >
                                   <i className="fas fa-clock-rotate-left mr-1 text-xs"></i>
                                   Link Expired
-                                </span>
+                                </button>
                               );
                             }
 
                             if (!assignment.tracking.has_tracking) {
                               return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                <button
+                                  onClick={() => {
+                                    setStatusChangeAssignment(assignment);
+                                    setShowChangeStatusModal(true);
+                                  }}
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                                  title="Click to change status"
+                                >
                                   <i className="fas fa-link-slash mr-1 text-xs"></i>
                                   Not Started
-                                </span>
+                                </button>
                               );
                             }
 
@@ -1534,12 +1561,14 @@ function JobAssignmentsPage() {
                               pending: {
                                 bg: "bg-yellow-100",
                                 text: "text-yellow-800",
+                                hover: "hover:bg-yellow-200",
                                 icon: "fa-clock",
                                 label: "Not Started",
                               },
                               active: {
                                 bg: "bg-green-100",
                                 text: "text-green-800",
+                                hover: "hover:bg-green-200",
                                 icon: "fa-location-dot",
                                 label: "In Progress",
                               },
@@ -1548,6 +1577,9 @@ function JobAssignmentsPage() {
                                 text: isNoShow
                                   ? "text-red-800"
                                   : "text-cyan-800",
+                                hover: isNoShow
+                                  ? "hover:bg-red-200"
+                                  : "hover:bg-cyan-200",
                                 icon: isNoShow
                                   ? "fa-user-slash"
                                   : "fa-check-circle",
@@ -1560,13 +1592,19 @@ function JobAssignmentsPage() {
                             ] || {
                               bg: "bg-gray-100",
                               text: "text-gray-600",
+                              hover: "hover:bg-gray-200",
                               icon: "fa-question",
                               label: assignment.tracking.status,
                             };
 
                             return (
-                              <span
-                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text}`}
+                              <button
+                                onClick={() => {
+                                  setStatusChangeAssignment(assignment);
+                                  setShowChangeStatusModal(true);
+                                }}
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text} ${config.hover} transition-colors cursor-pointer`}
+                                title="Click to change status"
                               >
                                 <i
                                   className={`fas ${config.icon} mr-1 text-xs`}
@@ -1581,7 +1619,7 @@ function JobAssignmentsPage() {
                                       )
                                     </span>
                                   )}
-                              </span>
+                              </button>
                             );
                           })()}
                         </td>
@@ -1607,11 +1645,20 @@ function JobAssignmentsPage() {
                           </td>
                         )}
 
-                        {/* Province */}
-                        <td className="py-2 px-2 text-sm text-nowrap">
-                          <span className="text-gray-700">
-                            {assignment.booking.province || "Unknown"}
-                          </span>
+                        {/* Resort */}
+                        <td className="py-2 px-2 text-sm">
+                          <div
+                            className="truncate"
+                            title={
+                              assignment.booking.resort ||
+                              assignment.booking.accommodation?.name ||
+                              "Unknown"
+                            }
+                          >
+                            {assignment.booking.resort ||
+                              assignment.booking.accommodation?.name ||
+                              "Unknown"}
+                          </div>
                         </td>
 
                         {/* From */}
@@ -1956,6 +2003,20 @@ function JobAssignmentsPage() {
         assignment={editingAssignment}
         onSuccess={() => {
           // Refresh assignments after successful driver update
+          fetchAssignments();
+        }}
+      />
+
+      {/* Change Tracking Status Modal */}
+      <ChangeTrackingStatusModal
+        isOpen={showChangeStatusModal}
+        onClose={() => {
+          setShowChangeStatusModal(false);
+          setStatusChangeAssignment(null);
+        }}
+        assignment={statusChangeAssignment}
+        onSuccess={() => {
+          // Refresh assignments after successful status change
           fetchAssignments();
         }}
       />

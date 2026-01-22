@@ -68,14 +68,20 @@ try {
         }
     }
 
-    // Check if already completed
-    if ($tokenData['status'] === 'completed') {
+    // Allow updating completion_type even if already completed
+    // This allows staff to correct if driver selected wrong status
+    $isAlreadyCompleted = $tokenData['status'] === 'completed';
+    $currentCompletionType = $tokenData['completion_type'];
+
+    // If already completed with same status, return early
+    if ($isAlreadyCompleted && $currentCompletionType === $status) {
         echo json_encode([
             'success' => true,
             'data' => [
                 'status' => 'completed',
                 'completed_at' => $tokenData['completed_at'],
-                'message' => 'Job already completed'
+                'completion_type' => $currentCompletionType,
+                'message' => 'Job already completed with this status'
             ]
         ]);
         exit;
@@ -138,60 +144,102 @@ try {
         }
     }
 
-    // Calculate duration
+    // Calculate duration (use existing completed_at if already completed)
     $startedAt = strtotime($tokenData['started_at']);
-    $completedAt = time();
+    if ($isAlreadyCompleted && $tokenData['completed_at']) {
+        $completedAt = strtotime($tokenData['completed_at']);
+        $isUpdatingExisting = true;
+    } else {
+        $completedAt = time();
+        $isUpdatingExisting = false;
+    }
     $durationMinutes = round(($completedAt - $startedAt) / 60);
 
-    // Update tracking token to completed with completion_type
-    $updateSql = "UPDATE driver_tracking_tokens
-                  SET status = 'completed',
-                      completed_at = NOW(),
-                      completion_type = :completion_type
-                  WHERE token = :token";
-    $updateStmt = $pdo->prepare($updateSql);
-    $updateStmt->execute([
-        ':token' => $token,
-        ':completion_type' => $status
-    ]);
+    // Update tracking token with completion_type
+    if ($isUpdatingExisting) {
+        // Only update completion_type, keep original completed_at
+        $updateSql = "UPDATE driver_tracking_tokens
+                      SET completion_type = :completion_type
+                      WHERE token = :token";
+        $updateStmt = $pdo->prepare($updateSql);
+        $updateStmt->execute([
+            ':token' => $token,
+            ':completion_type' => $status
+        ]);
+    } else {
+        // Set status to completed and completion_type
+        $updateSql = "UPDATE driver_tracking_tokens
+                      SET status = 'completed',
+                          completed_at = NOW(),
+                          completion_type = :completion_type
+                      WHERE token = :token";
+        $updateStmt = $pdo->prepare($updateSql);
+        $updateStmt->execute([
+            ':token' => $token,
+            ':completion_type' => $status
+        ]);
+    }
 
     // Update assignment status with completion_type
-    $updateAssignmentSql = "UPDATE driver_vehicle_assignments
-                           SET status = 'completed',
-                               completed_at = NOW(),
-                               completion_type = :completion_type
-                           WHERE id = :id";
-    $updateAssignmentStmt = $pdo->prepare($updateAssignmentSql);
-    $updateAssignmentStmt->execute([
-        ':id' => $tokenData['assignment_id'],
-        ':completion_type' => $status
-    ]);
+    if ($isUpdatingExisting) {
+        // Only update completion_type, keep original completed_at
+        $updateAssignmentSql = "UPDATE driver_vehicle_assignments
+                               SET completion_type = :completion_type
+                               WHERE id = :id";
+        $updateAssignmentStmt = $pdo->prepare($updateAssignmentSql);
+        $updateAssignmentStmt->execute([
+            ':id' => $tokenData['assignment_id'],
+            ':completion_type' => $status
+        ]);
+    } else {
+        // Set status to completed and completion_type
+        $updateAssignmentSql = "UPDATE driver_vehicle_assignments
+                               SET status = 'completed',
+                                   completed_at = NOW(),
+                                   completion_type = :completion_type
+                               WHERE id = :id";
+        $updateAssignmentStmt = $pdo->prepare($updateAssignmentSql);
+        $updateAssignmentStmt->execute([
+            ':id' => $tokenData['assignment_id'],
+            ':completion_type' => $status
+        ]);
+    }
 
-    // Update bookings table - only set internal_status, NOT ht_status
+    // Update bookings table - set internal_status and completion_type
     // ht_status is reserved for Holiday Taxis API responses only
     $updateBookingSql = "UPDATE bookings
-                         SET internal_status = 'completed'
+                         SET internal_status = 'completed',
+                             completion_type = :completion_type
                          WHERE booking_ref = :booking_ref";
 
     error_log("Updating booking {$tokenData['booking_ref']} with completion_type: $status (internal_status=completed)");
 
     $updateBookingStmt = $pdo->prepare($updateBookingSql);
-    $updateBookingStmt->execute([':booking_ref' => $tokenData['booking_ref']]);
+    $updateBookingStmt->execute([
+        ':booking_ref' => $tokenData['booking_ref'],
+        ':completion_type' => $status
+    ]);
 
     $rowsAffected = $updateBookingStmt->rowCount();
     error_log("Booking update affected $rowsAffected rows");
+
+    // Determine appropriate success message
+    $message = $isUpdatingExisting
+        ? "Status updated successfully from {$currentCompletionType} to {$status}"
+        : 'Job completed successfully';
 
     echo json_encode([
         'success' => true,
         'data' => [
             'status' => 'completed',
-            'completed_at' => date('Y-m-d H:i:s'),
+            'completed_at' => date('Y-m-d H:i:s', $completedAt),
             'total_duration_minutes' => $durationMinutes,
             'total_locations_sent' => (int)$tokenData['total_locations_sent'],
             'completion_type' => $status,
             'booking_ref' => $tokenData['booking_ref'],
             'rows_updated' => $rowsAffected,
-            'message' => 'Job completed successfully'
+            'was_updating' => $isUpdatingExisting,
+            'message' => $message
         ]
     ]);
 } catch (Exception $e) {
