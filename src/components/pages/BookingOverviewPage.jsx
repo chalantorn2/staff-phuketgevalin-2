@@ -18,6 +18,7 @@ function BookingOverviewPage() {
   const columnSelectorRef = useRef(null);
   const statusFilterRef = useRef(null);
   const provinceFilterRef = useRef(null);
+  const typeFilterRef = useRef(null);
 
   const [bookingData, setBookingData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ function BookingOverviewPage() {
       : {
           bookingRef: true,
           status: true,
-          bookingType: false,
+          bookingType: true,
           passenger: true,
           pax: true,
           pickupTime: true,
@@ -52,30 +53,43 @@ function BookingOverviewPage() {
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showProvinceDropdown, setShowProvinceDropdown] = useState(false);
+  const [showBookingTypeDropdown, setShowBookingTypeDropdown] = useState(false);
 
   // Local search state to prevent focus loss
   const [searchInput, setSearchInput] = useState("");
 
   // Function to get initial filters from localStorage
   const getInitialFilters = () => {
-    try {
-      const savedFilters = localStorage.getItem("bookingOverviewFilters");
-      if (savedFilters) {
-        return JSON.parse(savedFilters);
-      }
-    } catch (error) {
-      console.error("Error loading saved filters:", error);
-    }
     // Default filters
-    return {
+    const defaultFilters = {
       status: [],
       assignmentStatus: "all",
+      bookingType: [],
       province: [],
       dateFrom: "",
       dateTo: "",
       search: "",
       page: 1,
     };
+
+    try {
+      const savedFilters = localStorage.getItem("bookingOverviewFilters");
+      if (savedFilters) {
+        const parsed = JSON.parse(savedFilters);
+        // Merge with defaults to ensure all fields exist
+        return {
+          ...defaultFilters,
+          ...parsed,
+          // Ensure arrays are always arrays
+          status: Array.isArray(parsed.status) ? parsed.status : [],
+          bookingType: Array.isArray(parsed.bookingType) ? parsed.bookingType : [],
+          province: Array.isArray(parsed.province) ? parsed.province : [],
+        };
+      }
+    } catch (error) {
+      console.error("Error loading saved filters:", error);
+    }
+    return defaultFilters;
   };
 
   // Filters with arrays for status and province
@@ -155,16 +169,32 @@ function BookingOverviewPage() {
       ) {
         setShowProvinceDropdown(false);
       }
+      if (
+        typeFilterRef.current &&
+        !typeFilterRef.current.contains(event.target)
+      ) {
+        setShowBookingTypeDropdown(false);
+      }
     };
 
-    if (showColumnSelector || showStatusDropdown || showProvinceDropdown) {
+    if (
+      showColumnSelector ||
+      showStatusDropdown ||
+      showProvinceDropdown ||
+      showBookingTypeDropdown
+    ) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showColumnSelector, showStatusDropdown, showProvinceDropdown]);
+  }, [
+    showColumnSelector,
+    showStatusDropdown,
+    showProvinceDropdown,
+    showBookingTypeDropdown,
+  ]);
 
   // Calculate pagination
   const indexOfLastRecord = filters.page * recordsPerPage;
@@ -255,6 +285,71 @@ function BookingOverviewPage() {
     );
   };
 
+  // Get booking type with icon and color (same as BookingManagementPage)
+  const getBookingType = (booking) => {
+    const type = booking.booking_type || "";
+
+    // Check from booking type field first
+    if (type && type !== "N/A") {
+      const lowerType = type.toLowerCase();
+      if (lowerType.includes("arrival")) {
+        return {
+          label: "Arrival",
+          icon: "fa-plane-arrival",
+          color: "text-green-600",
+        };
+      } else if (lowerType.includes("departure")) {
+        return {
+          label: "Departure",
+          icon: "fa-plane-departure",
+          color: "text-red-600",
+        };
+      } else if (lowerType.includes("point")) {
+        return {
+          label: "P2P",
+          icon: "fa-route",
+          color: "text-purple-600",
+        };
+      }
+    }
+
+    // Fallback: Detect from dates and flight numbers
+    const hasArrivalDate =
+      booking.arrival_date && booking.arrival_date !== "0000-00-00 00:00:00";
+    const hasDepartureDate =
+      booking.departure_date &&
+      booking.departure_date !== "0000-00-00 00:00:00";
+    const hasArrivalFlight = booking.flight_number_arrival;
+    const hasDepartureFlight = booking.flight_number_departure;
+
+    if (hasArrivalDate || hasArrivalFlight) {
+      return {
+        label: "Arrival",
+        icon: "fa-plane-arrival",
+        color: "text-green-600",
+      };
+    } else if (hasDepartureDate || hasDepartureFlight) {
+      return {
+        label: "Departure",
+        icon: "fa-plane-departure",
+        color: "text-red-600",
+      };
+    } else if (!hasArrivalDate && !hasDepartureDate) {
+      // If no arrival/departure date, likely Point to Point
+      return {
+        label: "P2P",
+        icon: "fa-route",
+        color: "text-purple-600",
+      };
+    }
+
+    return {
+      label: "N/A",
+      icon: "fa-question",
+      color: "text-gray-400",
+    };
+  };
+
   const handleViewBooking = (bookingRef) => {
     setSelectedBookingRef({
       ref: bookingRef,
@@ -283,6 +378,7 @@ function BookingOverviewPage() {
     const defaultFilters = {
       status: [],
       assignmentStatus: "all",
+      bookingType: [],
       province: [],
       dateFrom: "",
       dateTo: "",
@@ -309,6 +405,8 @@ function BookingOverviewPage() {
         filterInfo.push(`Status: ${filters.status.join(", ")}`);
       if (filters.assignmentStatus !== "all")
         filterInfo.push(`Assignment: ${filters.assignmentStatus}`);
+      if (filters.bookingType.length > 0)
+        filterInfo.push(`Type: ${filters.bookingType.join(", ")}`);
       if (filters.province.length > 0)
         filterInfo.push(`Province: ${filters.province.join(", ")}`);
       if (filters.dateFrom) filterInfo.push(`From: ${filters.dateFrom}`);
@@ -347,7 +445,7 @@ function BookingOverviewPage() {
         if (visibleColumns.bookingRef) row.push(booking.booking_ref || "");
         if (visibleColumns.status)
           row.push(getStatusLabel(booking.ht_status) || "");
-        if (visibleColumns.bookingType) row.push(booking.booking_type || "");
+        if (visibleColumns.bookingType) row.push(getBookingType(booking).label || "");
         if (visibleColumns.passenger) row.push(booking.lead_passenger || "");
         if (visibleColumns.pax) row.push(booking.pax_total || "");
         if (visibleColumns.pickupTime)
@@ -411,6 +509,8 @@ function BookingOverviewPage() {
       filterInfo.push(`Status: ${filters.status.join(", ")}`);
     if (filters.assignmentStatus !== "all")
       filterInfo.push(`Assignment: ${filters.assignmentStatus}`);
+    if (filters.bookingType.length > 0)
+      filterInfo.push(`Type: ${filters.bookingType.join(", ")}`);
     if (filters.province.length > 0)
       filterInfo.push(`Province: ${filters.province.join(", ")}`);
     if (filters.dateFrom) filterInfo.push(`From: ${filters.dateFrom}`);
@@ -463,7 +563,7 @@ function BookingOverviewPage() {
         if (visibleColumns.bookingRef) cells.push(booking.booking_ref || "");
         if (visibleColumns.status)
           cells.push(getStatusLabel(booking.ht_status) || "");
-        if (visibleColumns.bookingType) cells.push(booking.booking_type || "");
+        if (visibleColumns.bookingType) cells.push(getBookingType(booking).label || "");
         if (visibleColumns.passenger) cells.push(booking.lead_passenger || "-");
         if (visibleColumns.pax) cells.push(booking.pax_total || "");
         if (visibleColumns.pickupTime)
@@ -657,7 +757,7 @@ function BookingOverviewPage() {
 
       {/* Filters with Checkbox Dropdowns */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
           {/* Search Bar - uses local state */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -739,6 +839,58 @@ function BookingOverviewPage() {
               <option value="assigned">Assigned</option>
               <option value="pending">Not Assigned</option>
             </select>
+          </div>
+
+          {/* Booking Type Filter - Dropdown with Checkboxes */}
+          <div className="relative" ref={typeFilterRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setShowBookingTypeDropdown(!showBookingTypeDropdown)
+              }
+              className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors text-left bg-white flex items-center justify-between"
+            >
+              <span className="text-sm truncate">
+                {filters.bookingType.length === 0
+                  ? "All Types"
+                  : `${filters.bookingType.length} selected`}
+              </span>
+              <i
+                className={`fas fa-chevron-down text-gray-400 transition-transform ${
+                  showBookingTypeDropdown ? "rotate-180" : ""
+                }`}
+              ></i>
+            </button>
+
+            {showBookingTypeDropdown && (
+              <div className="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-64 overflow-y-auto">
+                <div className="p-2">
+                  {[
+                    { value: "arrival", label: "Arrival" },
+                    { value: "departure", label: "Departure" },
+                    { value: "p2p", label: "Point to Point" },
+                  ].map((type) => (
+                    <label
+                      key={type.value}
+                      className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.bookingType.includes(type.value)}
+                        onChange={() =>
+                          handleCheckboxToggle("bookingType", type.value)
+                        }
+                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500"
+                      />
+                      <span className="ml-2 text-sm">{type.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Province Filter - Dropdown with Checkboxes */}
@@ -1009,8 +1161,25 @@ function BookingOverviewPage() {
                         </td>
                       )}
                       {visibleColumns.bookingType && (
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          {booking.booking_type || "-"}
+                        <td className="py-3 px-4 text-sm">
+                          {(() => {
+                            const bookingType = getBookingType(booking);
+                            return (
+                              <div
+                                className="flex items-center gap-1"
+                                title={bookingType.label}
+                              >
+                                <i
+                                  className={`fas ${bookingType.icon} ${bookingType.color} text-xs`}
+                                ></i>
+                                <span
+                                  className={`text-xs ${bookingType.color} font-medium`}
+                                >
+                                  {bookingType.label}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </td>
                       )}
                       {visibleColumns.passenger && (

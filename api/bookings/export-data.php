@@ -1,5 +1,11 @@
 <?php
 // api/bookings/export-data.php - Export Full Booking Data (Aligned with database-search.php)
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -28,6 +34,9 @@ try {
 
     $provinceParam = isset($_GET['province']) ? $_GET['province'] : 'all';
     $province = ($provinceParam === 'all' || empty($provinceParam)) ? [] : explode(',', $provinceParam);
+
+    $bookingTypeParam = isset($_GET['booking_type']) ? $_GET['booking_type'] : 'all';
+    $bookingType = ($bookingTypeParam === 'all' || empty($bookingTypeParam)) ? [] : explode(',', $bookingTypeParam);
 
     $format = isset($_GET['format']) ? $_GET['format'] : 'json';
 
@@ -105,6 +114,27 @@ try {
         }
     }
 
+    // Booking type filter (hybrid: dates for arrival/departure, booking_type for p2p)
+    if (!empty($bookingType) && count($bookingType) > 0) {
+        $typeConditions = [];
+        foreach ($bookingType as $idx => $type) {
+            if ($type === 'arrival') {
+                // Arrival: has arrival_date
+                $typeConditions[] = "(b.arrival_date IS NOT NULL AND b.arrival_date != '0000-00-00 00:00:00')";
+            } elseif ($type === 'departure') {
+                // Departure: has departure_date but no arrival_date
+                $typeConditions[] = "(b.departure_date IS NOT NULL AND b.departure_date != '0000-00-00 00:00:00' AND (b.arrival_date IS NULL OR b.arrival_date = '0000-00-00 00:00:00'))";
+            } elseif ($type === 'p2p') {
+                // P2P: booking_type is 'Quote'
+                $typeConditions[] = "LOWER(b.booking_type) LIKE :booking_type_$idx";
+                $params[":booking_type_$idx"] = '%quote%';
+            }
+        }
+        if (!empty($typeConditions)) {
+            $sql .= " AND (" . implode(' OR ', $typeConditions) . ")";
+        }
+    }
+
     // Date filter (same logic as database-search.php)
     if (!empty($dateFrom) || !empty($dateTo)) {
         if (!empty($dateFrom) && !empty($dateTo)) {
@@ -161,19 +191,19 @@ try {
         $pickupLocation = '-';
         $dropoffLocation = '-';
 
-        $bookingType = strtolower($booking['booking_type'] ?? '');
+        $currentBookingType = strtolower($booking['booking_type'] ?? '');
         $accommodation = $booking['accommodation_name'] ?? $booking['resort'] ?? '';
         $airport = $booking['airport'] ?? $booking['from_airport'] ?? $booking['to_airport'] ?? '';
 
-        if (strpos($bookingType, 'arrival') !== false || !empty($booking['arrival_date'])) {
+        if (strpos($currentBookingType, 'arrival') !== false || !empty($booking['arrival_date'])) {
             // Arrival transfer: Airport -> Accommodation
             $pickupLocation = $airport ?: 'Airport';
             $dropoffLocation = $accommodation ?: 'Resort/Hotel';
-        } else if (strpos($bookingType, 'departure') !== false || !empty($booking['departure_date'])) {
+        } else if (strpos($currentBookingType, 'departure') !== false || !empty($booking['departure_date'])) {
             // Departure transfer: Accommodation -> Airport
             $pickupLocation = $accommodation ?: 'Resort/Hotel';
             $dropoffLocation = $airport ?: 'Airport';
-        } else if (strpos($bookingType, 'quote') !== false) {
+        } else if (strpos($currentBookingType, 'quote') !== false) {
             // Quote transfer: Use pickup_address1 and dropoff_address1
             $pickupAddress = $booking['pickup_address1'] ?? '';
             $dropoffAddress = $booking['dropoff_address1'] ?? '';
@@ -284,6 +314,27 @@ try {
         }
     }
 
+    // Booking type filter (hybrid: dates for arrival/departure, booking_type for p2p)
+    if (!empty($bookingType) && count($bookingType) > 0) {
+        $typeConditions = [];
+        foreach ($bookingType as $idx => $type) {
+            if ($type === 'arrival') {
+                // Arrival: has arrival_date
+                $typeConditions[] = "(b.arrival_date IS NOT NULL AND b.arrival_date != '0000-00-00 00:00:00')";
+            } elseif ($type === 'departure') {
+                // Departure: has departure_date but no arrival_date
+                $typeConditions[] = "(b.departure_date IS NOT NULL AND b.departure_date != '0000-00-00 00:00:00' AND (b.arrival_date IS NULL OR b.arrival_date = '0000-00-00 00:00:00'))";
+            } elseif ($type === 'p2p') {
+                // P2P: booking_type is 'Quote'
+                $typeConditions[] = "LOWER(b.booking_type) LIKE :summary_booking_type_$idx";
+                $summaryParams[":summary_booking_type_$idx"] = '%quote%';
+            }
+        }
+        if (!empty($typeConditions)) {
+            $summarySql .= " AND (" . implode(' OR ', $typeConditions) . ")";
+        }
+    }
+
     if (!empty($dateFrom) || !empty($dateTo)) {
         if (!empty($dateFrom) && !empty($dateTo)) {
             // Both From and To specified - date range
@@ -372,6 +423,7 @@ try {
             'provinces' => $provinces,
             'filters' => [
                 'status' => $status,
+                'booking_type' => $bookingType,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'search' => $search,
@@ -387,6 +439,16 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Database error: ' . $e->getMessage()
+        'error' => 'Database error: ' . $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'General error: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
     ]);
 }

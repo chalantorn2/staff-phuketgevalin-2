@@ -341,9 +341,16 @@ export const backendApi = {
           : "all"
         : filters.province || "all";
 
+      const bookingTypeParam = Array.isArray(filters.bookingType)
+        ? filters.bookingType.length > 0
+          ? filters.bookingType.join(",")
+          : "all"
+        : filters.bookingType || "all";
+
       const params = new URLSearchParams({
         status: statusParam,
         assignment_status: filters.assignmentStatus || "",
+        booking_type: bookingTypeParam,
         date_from: filters.dateFrom || "",
         date_to: filters.dateTo || "",
         search: filters.search || "",
