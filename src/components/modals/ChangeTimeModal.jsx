@@ -1,12 +1,13 @@
 // src/components/modals/ChangeTimeModal.jsx
 import React, { useState, useEffect } from "react";
-import { Clock, X } from "lucide-react";
+import { Clock, X, CheckCircle, UserX } from "lucide-react";
 
 function ChangeTimeModal({ isOpen, onClose, assignment, onSuccess }) {
   const [newDate, setNewDate] = useState("");
   const [newHour, setNewHour] = useState("");
   const [newMinute, setNewMinute] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forceLoading, setForceLoading] = useState(null); // 'COMPLETED' | 'NO_SHOW' | null
   const [error, setError] = useState(null);
 
   // Initialize with current pickup date/time when modal opens
@@ -84,6 +85,41 @@ function ChangeTimeModal({ isOpen, onClose, assignment, onSuccess }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForceComplete = async (completionType) => {
+    const confirmMsg =
+      completionType === "NO_SHOW"
+        ? `ยืนยันบันทึก No Show?\n\nBooking: ${assignment.booking_ref}\nผู้โดยสาร: ${assignment.booking.passenger_name}\n\n(ระบบจะปิดงานในฐานข้อมูลของเราเท่านั้น ไม่ส่งข้อมูลไป Holiday Taxis)`
+        : `ยืนยันจบงาน?\n\nBooking: ${assignment.booking_ref}\nผู้โดยสาร: ${assignment.booking.passenger_name}\n\n(ระบบจะปิดงานในฐานข้อมูลของเราเท่านั้น ไม่ส่งข้อมูลไป Holiday Taxis)`;
+
+    if (!confirm(confirmMsg)) return;
+
+    setForceLoading(completionType);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/assignments/force-complete.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_ref: assignment.booking_ref,
+          completion_type: completionType,
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "Failed to close job");
+      }
+
+      onSuccess && onSuccess(data.data);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setForceLoading(null);
     }
   };
 
@@ -229,33 +265,78 @@ function ChangeTimeModal({ isOpen, onClose, assignment, onSuccess }) {
         </form>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
-            disabled={loading}
-          >
-            ยกเลิก
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <i className="fas fa-spinner fa-spin"></i>
-                กำลังบันทึก...
-              </>
-            ) : (
-              <>
-                <Clock size={16} />
-                บันทึกเวลาใหม่
-              </>
-            )}
-          </button>
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 flex-wrap">
+          {/* Left: force-complete buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleForceComplete("COMPLETED")}
+              className="px-3 py-2 text-sm font-medium text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={loading || forceLoading !== null}
+              title="ปิดงานเองโดยไม่ผ่านระบบ tracking (ใช้เมื่อหน้างานทำเสร็จแล้วแต่ยังไม่ถึงเวลากดได้)"
+            >
+              {forceLoading === "COMPLETED" ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  กำลังจบงาน...
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={16} />
+                  จบงาน
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleForceComplete("NO_SHOW")}
+              className="px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={loading || forceLoading !== null}
+              title="บันทึกว่าลูกค้าไม่มา"
+            >
+              {forceLoading === "NO_SHOW" ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  กำลังบันทึก...
+                </>
+              ) : (
+                <>
+                  <UserX size={16} />
+                  No Show
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Right: cancel + save time */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-white"
+              disabled={loading || forceLoading !== null}
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={loading || forceLoading !== null}
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  กำลังบันทึก...
+                </>
+              ) : (
+                <>
+                  <Clock size={16} />
+                  บันทึกเวลาใหม่
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

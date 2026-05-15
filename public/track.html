@@ -446,11 +446,9 @@
         const pickupDate = new Date(trackingInfo.pickup_date);
         const now = new Date();
 
-        // Calculate allowed time range: 5 hours before pickup to +24 hours after
-        const startAllowed = new Date(pickupDate);
-        startAllowed.setHours(startAllowed.getHours() - 5); // 5 hours before pickup
-        const endAllowed = new Date(pickupDate);
-        endAllowed.setHours(endAllowed.getHours() + 24);
+        // Holiday Taxis accepts events 30 min before pickup -> 5 hours after pickup.
+        const startAllowed = new Date(pickupDate.getTime() - 30 * 60 * 1000);
+        const endAllowed = new Date(pickupDate.getTime() + 5 * 60 * 60 * 1000);
 
         const formatDateTimeThai = (date) => {
           return date.toLocaleString("th-TH", {
@@ -469,7 +467,7 @@
           els.dateWarningTitle.textContent = "⏰ ยังไม่ถึงเวลาเริ่มงาน";
           els.dateWarningMessage.innerHTML = `งานนี้สามารถเริ่มได้ตั้งแต่<br><strong>${formatDateTimeThai(
             startAllowed
-          )}</strong><br><span class="text-xs">(5 ชั่วโมงก่อนเวลารับ)</span>`;
+          )}</strong><br><span class="text-xs">(30 นาทีก่อนเวลารับ)</span>`;
         } else if (now > endAllowed) {
           // Too late
           canStartTracking = false;
@@ -487,7 +485,7 @@
             endAllowed
           )}<br>หากมีปัญหากรุณาติดต่อเจ้าหน้าที่`;
         } else {
-          // Within allowed range (2 hours before pickup to +24 hours after)
+          // Within allowed range (30 min before pickup -> 5h after pickup)
           canStartTracking = true;
           els.dateWarning.classList.add("hidden");
         }

@@ -158,7 +158,33 @@ try {
     // Total issues
     $totalIssues = $missingProvince + $missingFlight;
 
-    // === 5. LAST SYNC TIME ===
+    // === 5. STALE TRACKING (drivers tracking >= 4h without completing) ===
+    $staleTrackingSql = "SELECT
+                            t.id as token_id,
+                            t.booking_ref,
+                            t.started_at,
+                            TIMESTAMPDIFF(MINUTE, t.started_at, NOW()) as minutes_tracking,
+                            d.name as driver_name,
+                            d.phone_number as driver_phone,
+                            v.registration as vehicle_registration,
+                            v.brand as vehicle_brand,
+                            v.model as vehicle_model,
+                            b.passenger_name,
+                            b.passenger_phone,
+                            b.pickup_date
+                         FROM driver_tracking_tokens t
+                         LEFT JOIN drivers d ON t.driver_id = d.id
+                         LEFT JOIN vehicles v ON t.vehicle_id = v.id
+                         LEFT JOIN bookings b ON t.booking_ref = b.booking_ref
+                         WHERE t.status = 'active'
+                           AND t.started_at IS NOT NULL
+                           AND TIMESTAMPDIFF(HOUR, t.started_at, NOW()) >= 4
+                         ORDER BY t.started_at ASC";
+    $stmt = $pdo->prepare($staleTrackingSql);
+    $stmt->execute();
+    $staleTracking = $stmt->fetchAll();
+
+    // === 6. LAST SYNC TIME ===
     $lastSyncSql = "SELECT MAX(completed_at) as last_sync FROM sync_status WHERE status = 'completed'";
     $stmt = $pdo->prepare($lastSyncSql);
     $stmt->execute();
@@ -207,6 +233,23 @@ try {
                 'missing_province' => $missingProvince,
                 'missing_flight' => $missingFlight
             ],
+            'stale_tracking' => array_map(function ($row) {
+                $minutes = (int)$row['minutes_tracking'];
+                $hours = floor($minutes / 60);
+                $mins = $minutes % 60;
+                return [
+                    'booking_ref' => $row['booking_ref'],
+                    'started_at' => $row['started_at'],
+                    'minutes_tracking' => $minutes,
+                    'duration_text' => $hours . ' ชม. ' . $mins . ' นาที',
+                    'driver_name' => $row['driver_name'] ?? '-',
+                    'driver_phone' => $row['driver_phone'] ?? '-',
+                    'vehicle' => trim(($row['vehicle_registration'] ?? '') . ' ' . ($row['vehicle_brand'] ?? '') . ' ' . ($row['vehicle_model'] ?? '')),
+                    'passenger_name' => $row['passenger_name'] ?? '-',
+                    'passenger_phone' => $row['passenger_phone'] ?? '-',
+                    'pickup_date' => $row['pickup_date']
+                ];
+            }, $staleTracking),
             'last_sync' => $lastSync,
             'timestamp' => date('Y-m-d H:i:s')
         ]

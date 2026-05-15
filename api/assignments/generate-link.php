@@ -121,6 +121,9 @@ try {
                   (token, booking_ref, assignment_id, driver_id, vehicle_id, vehicle_identifier, expires_at)
                   VALUES (:token, :booking_ref, :assignment_id, :driver_id, :vehicle_id, :vehicle_identifier, :expires_at)";
 
+    // Use vehicle_{id} format: Holiday Taxis API does not accept Thai characters
+    $vehicleIdentifier = 'vehicle_' . $assignment['vehicle_id'];
+
     $insertStmt = $pdo->prepare($insertSql);
     $result = $insertStmt->execute([
         ':token' => $token,
@@ -128,7 +131,7 @@ try {
         ':assignment_id' => $assignmentId,
         ':driver_id' => $assignment['driver_id'],
         ':vehicle_id' => $assignment['vehicle_id'],
-        ':vehicle_identifier' => $assignment['registration'],
+        ':vehicle_identifier' => $vehicleIdentifier,
         ':expires_at' => $expiresAt
     ]);
 

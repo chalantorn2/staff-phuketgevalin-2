@@ -93,7 +93,7 @@ try {
             require_once '../config/holiday-taxis.php';
 
             $locationData = [
-                'timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
+                'timestamp' => gmdate('Y-m-d\TH:i:s') . '+00:00',
                 'location' => [
                     'lat' => (float)$input['latitude'],
                     'lng' => (float)$input['longitude']

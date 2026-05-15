@@ -51,22 +51,25 @@ try {
         exit;
     }
 
-    // Validate date range: Can start from 5 hours before pickup to +24 hours after
+    // Validate date range: Can start from 30 minutes before pickup to +24 hours after.
+    // Holiday Taxis API only accepts driver events from 30 min before pickup, so we enforce
+    // that on the start side. We keep a wide +24h end window so staff/driver can still close
+    // the job even if completion happens late (HT will simply ignore late events, but the
+    // booking still needs to be marked COMPLETED / NO_SHOW locally).
     $pickupDate = $tokenData['pickup_date'] ?? $tokenData['arrival_date'] ?? $tokenData['departure_date'];
 
     if ($pickupDate) {
         $pickupTimestamp = strtotime($pickupDate);
         $now = time();
 
-        // Calculate allowed range: 5 hours before pickup to +24 hours after pickup
-        $startAllowed = $pickupTimestamp - (5 * 60 * 60); // 5 hours before pickup
-        $endAllowed = $pickupTimestamp + (24 * 60 * 60); // +24 hours from pickup time
+        $startAllowed = $pickupTimestamp - (30 * 60);       // 30 minutes before pickup
+        $endAllowed = $pickupTimestamp + (24 * 60 * 60);    // 24 hours after pickup
 
         if ($now < $startAllowed) {
             http_response_code(403);
             echo json_encode([
                 'success' => false,
-                'error' => 'Cannot start job yet. You can start from 5 hours before the pickup time.',
+                'error' => 'Cannot start job yet. You can start from 30 minutes before the pickup time.',
                 'can_start_at' => date('Y-m-d H:i:s', $startAllowed),
                 'pickup_time' => date('Y-m-d H:i:s', $pickupTimestamp)
             ]);

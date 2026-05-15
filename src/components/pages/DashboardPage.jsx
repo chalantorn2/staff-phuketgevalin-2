@@ -54,7 +54,7 @@ function DashboardPage() {
     const date = new Date(dateString);
     return `${date.toLocaleDateString("en-GB")} ${date.toLocaleTimeString(
       "en-GB",
-      { hour: "2-digit", minute: "2-digit" }
+      { hour: "2-digit", minute: "2-digit" },
     )}`;
   };
 
@@ -123,13 +123,13 @@ function DashboardPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">ภาพรวมงานและข้อมูลสำคัญ</p>
         </div>
-        <button
+        {/* <button
           onClick={() => setAppPage("test-sync")}
           className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
         >
           <i className="fas fa-vial mr-2"></i>
           Test Sync
-        </button>
+        </button> */}
       </div>
 
       {/* Quick Stats Cards */}
@@ -183,10 +183,10 @@ function DashboardPage() {
                   stat.color === "cyan"
                     ? "bg-cyan-50"
                     : stat.color === "green"
-                    ? "bg-green-50"
-                    : stat.color === "orange"
-                    ? "bg-orange-50"
-                    : "bg-purple-50"
+                      ? "bg-green-50"
+                      : stat.color === "orange"
+                        ? "bg-orange-50"
+                        : "bg-purple-50"
                 }`}
               >
                 <i
@@ -194,10 +194,10 @@ function DashboardPage() {
                     stat.color === "cyan"
                       ? "text-cyan-600"
                       : stat.color === "green"
-                      ? "text-green-600"
-                      : stat.color === "orange"
-                      ? "text-orange-600"
-                      : "text-purple-600"
+                        ? "text-green-600"
+                        : stat.color === "orange"
+                          ? "text-orange-600"
+                          : "text-purple-600"
                   }`}
                 ></i>
               </div>
@@ -205,6 +205,111 @@ function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Stale Tracking Alert - drivers tracking >= 4h without completing */}
+      {dashboardData?.stale_tracking?.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-orange-200">
+          <div className="px-6 py-4 bg-orange-50 border-b border-orange-200 rounded-t-xl">
+            <div className="flex items-center space-x-2">
+              <i className="fas fa-clock text-orange-600"></i>
+              <h2 className="text-lg font-semibold text-orange-900">
+                คนขับ tracking เกิน 4 ชม. แล้วยังไม่กดเสร็จ
+              </h2>
+              <span className="bg-orange-600 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+                {dashboardData.stale_tracking.length}
+              </span>
+            </div>
+            <p className="text-sm text-orange-800 mt-1">
+              ติดต่อคนขับเพื่อยืนยันสถานะงาน (เสร็จสมบูรณ์ / No Show /
+              ยังให้บริการอยู่)
+            </p>
+          </div>
+
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full text-nowrap">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Booking Ref
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Tracking มาแล้ว
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      Pickup Time
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      คนขับ
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      เบอร์คนขับ
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      รถ
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      ผู้โดยสาร
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboardData.stale_tracking.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-gray-100 hover:bg-orange-50"
+                    >
+                      <td className="py-3 px-4">
+                        <button
+                          className="text-cyan-600 hover:text-cyan-800 font-medium hover:underline"
+                          onClick={() => {
+                            setSelectedBookingRef({
+                              ref: item.booking_ref,
+                              fromPage: "dashboard",
+                            });
+                            setAppPage("booking-detail");
+                          }}
+                        >
+                          {item.booking_ref}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-1 text-xs font-bold rounded bg-orange-500 text-white">
+                          {item.duration_text}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        {formatDateTime(item.pickup_date)}
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                        {item.driver_name}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {item.driver_phone !== "-" ? (
+                          <a
+                            href={`tel:${item.driver_phone}`}
+                            className="text-cyan-600 hover:underline"
+                          >
+                            {item.driver_phone}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {item.vehicle || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {item.passenger_name}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Issues Alert */}
       {dashboardData?.issues?.total > 0 && (

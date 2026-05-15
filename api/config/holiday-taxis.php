@@ -3,7 +3,7 @@
 class HolidayTaxisConfig
 {
     // Production API (Default)
-    const API_KEY = 'htscon_b6fede289eec88ec1a481ebdb689347e8d9353bafc037e74de7ffd2f1cf86a0f2ee5c0fd8d337304';
+    const API_KEY = 'htscon_498d3538a201bd34019cd008a0d110ad1fc501c72cf5ed7a17fc20a7c2a36fe41c00c51778cba0ab';
     const API_ENDPOINT = 'https://suppliers.holidaytaxis.com';
     const API_VERSION = '2025-01';
 

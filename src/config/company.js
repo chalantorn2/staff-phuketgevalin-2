@@ -80,7 +80,7 @@ export const COMPANY_CONFIGS = {
 
     // Holiday Taxis API Configuration
     api: {
-      key: "htscon_b6fede289eec88ec1a481ebdb689347e8d9353bafc037e74de7ffd2f1cf86a0f2ee5c0fd8d337304",
+      key: "htscon_498d3538a201bd34019cd008a0d110ad1fc501c72cf5ed7a17fc20a7c2a36fe41c00c51778cba0ab",
       endpoint: "https://suppliers.holidaytaxis.com",
       version: "2025-01",
     },

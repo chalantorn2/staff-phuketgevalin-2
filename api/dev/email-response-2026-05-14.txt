@@ -1,0 +1,100 @@
+Subject: Re: Phuket Gevalin Business - Thailand | Driver Event data feedback
+
+Dear Thomais,
+
+Thank you for the feedback covering 4-11 May 2026. We have identified the following issues and applied the corresponding fixes.
+
+1. Invalid Vehicle Identifier
+   vehicleIdentifier in some requests contained non-ASCII characters,
+   and in others the value used in POST /location did not match the
+   value used in the preceding PUT /vehicles.
+   Fix: vehicleIdentifier now strictly conforms to the spec pattern
+   `^[A-Za-z0-9._~-]{1,40}$` and is used consistently across
+   PUT /vehicles and POST /location for the same vehicle.
+
+2. Data provided too early
+   Driver Events were being submitted earlier than the 30-minute
+   pre-pickup window.
+   Fix: Driver Events are no longer submitted earlier than 30 minutes
+   before the scheduled pickup time.
+
+3. Pickup time in the past
+   Location updates were sent beyond the acceptable post-pickup window.
+   Fix: Drivers have been reminded to mark each job as completed at
+   the end of the transfer.
+
+4. Invalid Timestamp
+   Payload format already matches the spec (UTC, `+00:00`, ISO 8601);
+   the volume of errors indicates clock drift exceeding the 10-second
+   tolerance.
+   Fix: timestamp generation audited and unified; NTP synchronization
+   verified on the host.
+
+═══════════════════════════════════════════════════════════════════
+QUESTION
+═══════════════════════════════════════════════════════════════════
+
+We would also like to confirm one operational scenario with you.
+
+Example: booking HBEDS-28266822, scheduled pickup time 12:00.
+The driver actually picked up the customer at 08:00 and the transfer
+was already completed before the original pickup time.
+
+In a case like this, is it correct that we should update the pickup
+time on the booking (e.g. via POST /bookings/reconfirm with
+newpickuphour=08 / newpickupmin=00) so that subsequent Driver Events
+fall within the accepted window? Or is there a recommended way to
+handle early pickups from your side?
+
+Best regards,
+[Your Name]
+Phuket Gevalin Transport Services
+
+═══════════════════════════════════════════════════════════════════
+THAI / ไทย
+═══════════════════════════════════════════════════════════════════
+
+เรื่อง: ตอบกลับ Feedback Driver Event API
+
+เรียน คุณ Thomais
+
+ขอบคุณสำหรับ feedback ช่วง 4-11 พ.ค. 2026 ตรวจสอบแล้วพบปัญหาและ
+แก้ไขเรียบร้อย ดังนี้:
+
+1. Invalid Vehicle Identifier
+   vehicleIdentifier บาง request มี non-ASCII บาง request ค่าใน
+   POST /location ไม่ตรงกับ PUT /vehicles
+   แก้: vehicleIdentifier ตรง pattern `^[A-Za-z0-9._~-]{1,40}$`
+   และใช้ ID เดียวกันตลอด PUT /vehicles + POST /location
+
+2. Data provided too early
+   ส่ง Driver Events เร็วกว่า 30 นาทีก่อน pickup
+   แก้: ไม่ส่ง Driver Events ก่อน 30 นาทีก่อน pickup แล้ว
+
+3. Pickup time in the past
+   มี location update ถูกส่งเกินช่วงรับได้หลัง pickup
+   แก้: กำชับ driver ให้กดเสร็จสิ้นงานทุกครั้งหลังจบ transfer
+
+4. Invalid Timestamp
+   format ตรง spec ทุกประการ ปริมาณ error สูงเกิดจาก clock drift
+   เกิน 10 วินาทีที่ spec อนุญาต
+   แก้: ตรวจ timestamp ทุก endpoint + verify NTP บน host
+
+═══════════════════════════════════════════════════════════════════
+คำถาม
+═══════════════════════════════════════════════════════════════════
+
+ขอสอบถาม operational scenario เพิ่มเติม
+
+ตัวอย่าง: booking HBEDS-28266822 มี pickup time 12:00
+แต่หน้างาน driver ไปรับลูกค้าจริงตอน 08:00 และส่งเสร็จก่อน
+เวลา pickup เดิมแล้ว
+
+เคสแบบนี้ ทำตามนี้ถูกต้องไหม: อัปเดต pickup time บน booking
+(เช่น POST /bookings/reconfirm ด้วย newpickuphour=08 / newpickupmin=00)
+เพื่อให้ Driver Events ที่ตามมาอยู่ในช่วงที่ระบบรับได้
+หรือฝั่ง HT มีวิธีจัดการ early pickup ที่แนะนำ
+
+ขอแสดงความนับถือ
+[ชื่อของคุณ]
+Phuket Gevalin Transport Services
